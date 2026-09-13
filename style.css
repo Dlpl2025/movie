@@ -1,0 +1,78 @@
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #07090e;
+    color: #f1f5f9;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ব্যাকগ্রাউন্ড অরা গ্লো */
+.ambient-glow {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    height: 380px;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(217, 70, 239, 0.08) 50%, transparent 80%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.glass-nav {
+    background: rgba(11, 15, 25, 0.75);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel {
+    background: rgba(17, 24, 39, 0.65);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* স্ক্রলবার */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
+/* ভিনাইল অডিও অ্যানিমেশন */
+@keyframes vinyl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin-vinyl { animation: vinyl-spin 10s linear infinite; }
+.paused-vinyl { animation-play-state: paused !important; }
+
+/* ইউটিউব স্টাইল ইন-অ্যাপ মিনি প্লেয়ার (Floating PiP) */
+#floatingPiP {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom right;
+}
+
+#floatingPiP.minimized {
+    bottom: 72px;
+    right: 12px;
+    width: 320px;
+    aspect-ratio: 16 / 9;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 0 15px rgba(14, 165, 233, 0.4);
+    border: 2px solid rgba(56, 189, 248, 0.4);
+    z-index: 60;
+}
+
+@media (min-width: 640px) {
+    #floatingPiP.minimized {
+        bottom: 24px;
+        right: 24px;
+        width: 380px;
+    }
+}
+
+#floatingPiP.maximized {
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.98);
+    z-index: 80;
+}
