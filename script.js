@@ -164,7 +164,7 @@ function renderMore() {
     }
 }
 
-// ইন-অ্যাপ ফ্লোটিং PiP প্লেয়ার ও মোবাইল অটো-রোটেট
+// ইন-অ্যাপ ফ্লোটিং PiP প্লেয়ার ও মোবাইল অটো-ল্যান্ডস্কেপ ফুলস্ক্রিন
 function playMedia(id, name, type) {
     const streamUrl = `${API_BASE}/stream/${id}`;
 
@@ -191,28 +191,38 @@ function playMedia(id, name, type) {
             playbackRate: true,
             aspectRatio: true,
             fullscreenWeb: false,
-            autoOrientation: true,
             lock: true
         });
 
-        // মোবাইলে ফুলস্ক্রিনে ল্যান্ডস্কেপ ও এক্সিটে পোর্ট্রেট অটো-রোটেট
+        // ফুলস্ক্রিনে ল্যান্ডস্কেপ ও এক্সিটে পোর্ট্রেট অটো-রোটেট
         art.on('fullscreen', async (state) => {
+            const videoEl = art.video;
+
             if (state) {
                 try {
                     if (screen.orientation && screen.orientation.lock) {
                         await screen.orientation.lock('landscape');
+                    } else if (screen.lockOrientation) {
+                        screen.lockOrientation('landscape');
                     }
-                } catch (err) {
-                    console.log("Auto-rotate error:", err);
+                } catch (e) {
+                    console.log("Orientation lock blocked by browser:", e);
                 }
+
+                try {
+                    if (videoEl && videoEl.webkitEnterFullscreen) {
+                        videoEl.webkitEnterFullscreen();
+                    }
+                } catch (e) {}
+
             } else {
                 try {
                     if (screen.orientation && screen.orientation.unlock) {
                         screen.orientation.unlock();
+                    } else if (screen.unlockOrientation) {
+                        screen.unlockOrientation();
                     }
-                } catch (err) {
-                    console.log("Orientation unlock error:", err);
-                }
+                } catch (e) {}
             }
         });
 
