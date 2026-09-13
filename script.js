@@ -17,9 +17,21 @@ let plyrInstance = null;
 async function fetchMedia() {
     const loader = document.getElementById('loader');
     if (loader) loader.classList.remove('hidden');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
-        const fetchOptions = window.location.protocol === 'file:' ? {} : { credentials: 'include' };
+        const fetchOptions = {
+            signal: controller.signal
+        };
+        if (window.location.protocol !== 'file:') {
+            fetchOptions.credentials = 'include';
+        }
+
         const res = await fetch(`${API_BASE}/api/files`, fetchOptions);
+        clearTimeout(timeoutId);
+
         const data = await res.json();
         rawFiles = data.files || [];
         isVaultUnlocked = data.vault_unlocked;
@@ -27,10 +39,11 @@ async function fetchMedia() {
         renderChips();
         resetAndFilter();
     } catch (err) {
-        console.error("ডেটা লোডিং সমস্যা:", err);
+        clearTimeout(timeoutId);
+        console.error("ডেটা ফেচিং ব্যর্থ:", err);
         const grid = document.getElementById('mediaGrid');
         if (grid) {
-            grid.innerHTML = `<div class="col-span-full text-center py-12 text-rose-400 text-xs">সার্ভারের সাথে কানেক্ট করা যায়নি। ব্যাকএন্ড চেক করুন।</div>`;
+            grid.innerHTML = `<div class="col-span-full text-center py-16 text-rose-400 text-xs">সার্ভারের সাথে কানেক্ট করা যায়নি। পেজটি রিফ্রেশ করুন।</div>`;
         }
     } finally {
         if (loader) loader.classList.add('hidden');
@@ -151,7 +164,7 @@ function renderMore() {
     }
 }
 
-// ইন-অ্যাপ ফ্লোটিং PiP প্লেয়ার
+// ইন-অ্যাপ ফ্লোটিং PiP প্লেয়ার
 function playMedia(id, name, type) {
     const streamUrl = `${API_BASE}/stream/${id}`;
 
@@ -244,7 +257,7 @@ function closeAudioModal() {
     }
 }
 
-// ভল্ট মোডাল
+// ভল্ট হ্যান্ডলিং
 function handleVaultModal() {
     const modal = document.getElementById('vaultModal');
     if (!isVaultUnlocked) {
