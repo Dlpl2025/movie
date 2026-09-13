@@ -5,9 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>StreamVault - Premium Entertainment</title>
     
-    <!-- Favicon & Icons -->
+    <!-- Favicon & Touch Icons -->
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
+
+    <!-- PWA & Android Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#07090e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="StreamVault">
     
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -124,15 +132,26 @@
                 <i class="fa-solid fa-user-lock"></i>
             </div>
             <h4 class="font-bold text-sm text-white mb-1">অ্যাডমিন ভল্ট</h4>
-            <p class="text-[11px] text-slate-400 mb-4">লুকানো ফাইল আনলক করতে ক্রেডেনশিয়াল দিন</p>
+            <p class="text-[11px] text-slate-400 mb-4">লুকানো ফাইল আনলক করতে ক্রেডেনশিয়াল দিন</p>
             <form onsubmit="submitVault(event)" class="space-y-3">
                 <input type="text" id="vUser" required placeholder="ইউজার আইডি" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500">
                 <input type="password" id="vPass" required placeholder="পাসওয়ার্ড" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500">
-                <p id="vError" class="text-rose-500 text-[10px] hidden">লগইন সঠিক নয়!</p>
+                <p id="vError" class="text-rose-500 text-[10px] hidden">লগইন সঠিক নয়!</p>
                 <button type="submit" class="w-full py-2 bg-rose-600 hover:bg-rose-500 rounded-xl text-xs font-bold text-white transition">আনলক</button>
             </form>
         </div>
     </div>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker Registered:', reg.scope))
+                    .catch(err => console.log('Service Worker Failed:', err));
+            });
+        }
+    </script>
 
     <!-- Custom JS Link -->
     <script src="script.js"></script>
