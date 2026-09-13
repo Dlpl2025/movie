@@ -164,7 +164,7 @@ function renderMore() {
     }
 }
 
-// ইন-অ্যাপ ফ্লোটিং PiP প্লেয়ার
+// ইন-অ্যাপ ফ্লোটিং PiP প্লেয়ার ও মোবাইল অটো-রোটেট
 function playMedia(id, name, type) {
     const streamUrl = `${API_BASE}/stream/${id}`;
 
@@ -190,8 +190,32 @@ function playMedia(id, name, type) {
             setting: true,
             playbackRate: true,
             aspectRatio: true,
-            fullscreenWeb: false
+            fullscreenWeb: false,
+            autoOrientation: true,
+            lock: true
         });
+
+        // মোবাইলে ফুলস্ক্রিনে ল্যান্ডস্কেপ ও এক্সিটে পোর্ট্রেট অটো-রোটেট
+        art.on('fullscreen', async (state) => {
+            if (state) {
+                try {
+                    if (screen.orientation && screen.orientation.lock) {
+                        await screen.orientation.lock('landscape');
+                    }
+                } catch (err) {
+                    console.log("Auto-rotate error:", err);
+                }
+            } else {
+                try {
+                    if (screen.orientation && screen.orientation.unlock) {
+                        screen.orientation.unlock();
+                    }
+                } catch (err) {
+                    console.log("Orientation unlock error:", err);
+                }
+            }
+        });
+
     } else if (type === 'audio') {
         openAudioModal(streamUrl, name, id);
     } else {
@@ -257,7 +281,7 @@ function closeAudioModal() {
     }
 }
 
-// ভল্ট হ্যান্ডলিং
+// ভল্ট মোডাল
 function handleVaultModal() {
     const modal = document.getElementById('vaultModal');
     if (!isVaultUnlocked) {
