@@ -5,9 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>bdey.online</title>
 
+  <!-- PWA Meta & Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#030305" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <!-- Browser Tab Icon (Favicon) -->
   <link rel="icon" type="image/png" href="icon.png" />
   <link rel="shortcut icon" type="image/png" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon.png" />
 
   <style>
     /* CSS Reset */
@@ -164,7 +171,7 @@
       min-height: 100vh;
     }
 
-    /* Grid Layout: Closer spacing and bigger size */
+    /* Grid Layout */
     .icons-grid {
       display: grid;
       width: 100%;
@@ -174,7 +181,7 @@
       align-items: center;
     }
 
-    /* Icon Cards - No border, deep black transparent shadow */
+    /* Icon Cards */
     .icon-card {
       width: 100%;
       aspect-ratio: 1 / 1;
@@ -196,7 +203,7 @@
                   background 0.25s ease;
     }
 
-    /* GIF / Icon inside Card - Bigger size with black transparent drop-shadow */
+    /* GIF / Icon inside Card */
     .icon-card img {
       width: 78%;
       height: 78%;
@@ -238,7 +245,7 @@
       }
     }
 
-    /* Responsive for Mobile (2 Columns x 4 Rows) */
+    /* Responsive for Mobile */
     @media (max-width: 580px) {
       .top-header {
         height: 68px;
@@ -279,54 +286,75 @@
   <!-- Fixed Top Header Logo (Home Button) -->
   <header class="top-header">
     <a href="index.html" class="header-logo-container" title="Home">
-      <img src="https://i.postimg.cc/Mpmd1bST/logo.png" alt="" />
+      <img src="https://i.postimg.cc/Mpmd1bST/logo.png" alt="Home Logo" />
     </a>
   </header>
 
-  <!-- 8 Animated GIF Navigation Cards linked to their folders -->
+  <!-- 8 Animated Navigation Cards -->
   <main>
     <div class="icons-grid">
       <!-- 1. Radio -->
       <a href="radio/" class="icon-card">
-        <img src="https://i.postimg.cc/rphjPVsZ/radio.gif" alt="" />
+        <img src="https://i.postimg.cc/rphjPVsZ/radio.gif" alt="Radio" />
       </a>
 
       <!-- 2. TV -->
       <a href="tv/index.html" class="icon-card">
-        <img src="https://i.postimg.cc/d1L6MbT7/tv.gif" alt="" />
+        <img src="https://i.postimg.cc/d1L6MbT7/tv.gif" alt="TV" />
       </a>
 
       <!-- 3. Sport -->
       <a href="sport/index.html" class="icon-card">
-        <img src="https://i.postimg.cc/W3h8RBJN/sport.gif" alt="" />
+        <img src="https://i.postimg.cc/W3h8RBJN/sport.gif" alt="Sport" />
       </a>
 
       <!-- 4. Music -->
       <a href="music/" class="icon-card">
-        <img src="https://i.postimg.cc/YSXRsr0n/music.gif" alt="" />
+        <img src="https://i.postimg.cc/YSXRsr0n/music.gif" alt="Music" />
       </a>
 
-      <!-- 5. Gallary -->
+      <!-- 5. Gallery -->
       <a href="gallary/index.html" class="icon-card">
-        <img src="https://i.postimg.cc/yN6njg1F/gallary.gif" alt="" />
+        <img src="https://i.postimg.cc/yN6njg1F/gallary.gif" alt="Gallery" />
       </a>
 
       <!-- 6. Ebook -->
       <a href="ebook/index.html" class="icon-card">
-        <img src="https://i.postimg.cc/pLJqKYH2/ebook.gif" alt="" />
+        <img src="https://i.postimg.cc/pLJqKYH2/ebook.gif" alt="Ebook" />
       </a>
 
       <!-- 7. Magazine -->
       <a href="magazine/index.html" class="icon-card">
-        <img src="https://i.postimg.cc/Z5xV6FSc/magazine.gif" alt="" />
+        <img src="https://i.postimg.cc/Z5xV6FSc/magazine.gif" alt="Magazine" />
       </a>
 
       <!-- 8. Telegram -->
       <a href="telegram/index.html" class="icon-card">
-        <img src="https://i.postimg.cc/26VGpsB3/telegram.gif" alt="" />
+        <img src="https://i.postimg.cc/26VGpsB3/telegram.gif" alt="Telegram" />
       </a>
     </div>
   </main>
 
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((registration) => {
+            console.log('PWA Service Worker registered:', registration.scope);
+          })
+          .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
+
 </body>
 </html>
+```[cite: 1]
+
+---
+
+### Mone rakhben:
+* Ei `index.html` file-ti je folder-e thakbe, thik shei eki folder-e **`manifest.json`** ebong **`sw.js`** file duto rakhben.
