@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live VT Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Live Sport Player</title>
   
   <!-- HLS.js Library -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
@@ -26,13 +26,13 @@
       position: relative;
     }
 
-    /* Ambient Dynamic Glowing Background Overlay */
+    /* Ambient Dynamic Glowing Background */
     .dynamic-bg-glow {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
-      background: radial-gradient(circle at center top, rgba(225, 29, 72, 0.25) 0%, transparent 70%);
+      background: radial-gradient(circle at center top, rgba(16, 185, 129, 0.25) 0%, transparent 70%);
       filter: blur(80px);
       transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
       opacity: 0.85;
@@ -127,7 +127,7 @@
       transform: scale(0.92);
     }
 
-    /* Dropdown Filter Box from Triple Dot */
+    /* Dropdown Filter Box */
     .dropdown-filter-panel {
       display: none;
       position: absolute;
@@ -196,7 +196,7 @@
       background: rgba(255, 255, 255, 0.12);
     }
 
-    /* Main Container */
+    /* Container */
     .container {
       max-width: 1200px;
       width: 100%;
@@ -286,7 +286,7 @@
       letter-spacing: 0.3px;
     }
 
-    /* Modal Player Popup */
+    /* Modal Video Popup */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -419,7 +419,6 @@
 
   <!-- Top Red Navbar -->
   <header class="navbar">
-    <!-- Triple Dot Menu Button -->
     <div class="nav-left" id="menuToggleBtn" title="Search & Categories">⋮</div>
     
     <!-- Hidden Dropdown Filter Panel -->
@@ -440,7 +439,7 @@
   <!-- Container -->
   <main class="container">
     <div class="header-bar">
-      <h1 class="page-title">Live Channels</h1>
+      <h1 class="page-title">Live Sports</h1>
     </div>
 
     <!-- Circle Grid -->
@@ -467,7 +466,8 @@
   </div>
 
   <script>
-    const M3U_URL = 'sport.m3u';
+    // m3u file-er somvobyo nam (apnar folder-e thaka file khujbe)
+    const M3U_FILES = ['Serbien Sport tv.m3u', 'sport.m3u', 'tv.m3u'];
     const PROXY_BASE = "https://bdtv.balaramdey.workers.dev/?url=";
 
     const channelGrid = document.getElementById('channel-grid');
@@ -488,7 +488,7 @@
     let currentChannel = null;
     let triedProxy = false;
 
-    // Toggle Dropdown Filter on Triple Dot Click
+    // Toggle Dropdown Filter
     menuToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       dropdownFilter.classList.toggle('active');
@@ -498,22 +498,32 @@
       e.stopPropagation();
     });
 
-    // Close dropdown on outside click
     document.addEventListener('click', () => {
       dropdownFilter.classList.remove('active');
     });
 
     async function loadM3U() {
+      let loadedText = null;
+
+      for (const file of M3U_FILES) {
+        try {
+          const res = await fetch(encodeURI(file));
+          if (res.ok) {
+            loadedText = await res.text();
+            break;
+          }
+        } catch (e) {}
+      }
+
       try {
-        let response = await fetch(M3U_URL);
-        if (!response.ok) {
-          response = await fetch('https://dlpl2025.github.io/travelvt/indiantv/sport.m3u');
+        if (!loadedText) {
+          throw new Error("M3U file not found! Apnar folder-e 'Serbien Sport tv.m3u' ba 'sport.m3u' file-ti rakhun.");
         }
-        const text = await response.text();
-        allChannels = parseM3U(text);
+
+        allChannels = parseM3U(loadedText);
 
         if (allChannels.length === 0) {
-          throw new Error("No channels found in M3U file!");
+          throw new Error("No channels found inside M3U file!");
         }
 
         buildCategoryDropdown();
@@ -539,13 +549,13 @@
           currentInfo = {
             name: name || "Channel " + (channels.length + 1),
             logo: logoMatch ? logoMatch[1] : "",
-            category: groupMatch ? groupMatch[1] : "General"
+            category: groupMatch ? groupMatch[1] : "Sports"
           };
         } else if (line && !line.startsWith('#')) {
           channels.push({
             name: currentInfo.name || "Channel " + (channels.length + 1),
             logo: currentInfo.logo || "",
-            category: currentInfo.category || "General",
+            category: currentInfo.category || "Sports",
             url: line
           });
           currentInfo = {};
@@ -590,7 +600,7 @@
         const card = document.createElement('div');
         card.className = 'channel-circle-card';
 
-        const fallbackImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='2' ry='2'></rect><polyline points='17 2 12 7 7 2'></polyline></svg>";
+        const fallbackImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20'></path><path d='M2 12h20'></path></svg>";
         const logoSrc = ch.logo && ch.logo.startsWith('http') ? ch.logo : fallbackImg;
 
         card.innerHTML = `
@@ -605,7 +615,6 @@
       });
     }
 
-    // Dynamic Color Gradient Generator based on Channel name & logo
     function applyChannelGradient(channel) {
       let hash = 0;
       for (let i = 0; i < channel.name.length; i++) {
@@ -613,12 +622,12 @@
       }
 
       const hue1 = Math.abs(hash % 360);
-      const hue2 = (hue1 + 55) % 360;
+      const hue2 = (hue1 + 50) % 360;
 
-      const color1 = `hsl(${hue1}, 75%, 32%)`;
-      const color2 = `hsl(${hue2}, 85%, 22%)`;
+      const color1 = `hsl(${hue1}, 70%, 30%)`;
+      const color2 = `hsl(${hue2}, 80%, 20%)`;
 
-      document.body.style.background = `radial-gradient(circle at 50% 15%, hsl(${hue1}, 45%, 15%) 0%, #080d1a 65%, #020617 100%)`;
+      document.body.style.background = `radial-gradient(circle at 50% 15%, hsl(${hue1}, 40%, 14%) 0%, #080d1a 65%, #020617 100%)`;
       dynamicBg.style.background = `radial-gradient(circle at center top, ${color1} 0%, ${color2} 45%, transparent 75%)`;
     }
 
@@ -632,9 +641,7 @@
       modalStatus.style.color = "#34d399";
       modal.classList.add('active');
 
-      // Change background gradient based on channel
       applyChannelGradient(channel);
-
       dropdownFilter.classList.remove('active');
       playStream(channel.url);
     }
