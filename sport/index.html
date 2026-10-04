@@ -26,7 +26,6 @@
       position: relative;
     }
 
-    /* Ambient Dynamic Glowing Background */
     .dynamic-bg-glow {
       position: fixed;
       inset: 0;
@@ -38,7 +37,6 @@
       opacity: 0.85;
     }
 
-    /* Fixed Top-Right Root Home Button */
     .root-home-btn {
       position: fixed;
       top: 6px;
@@ -76,7 +74,6 @@
       transform: scale(0.92);
     }
 
-    /* Fixed Top-Middle Logo */
     .top-logo {
       position: fixed;
       top: 6px;
@@ -89,7 +86,6 @@
       pointer-events: none;
     }
 
-    /* Top Red Navigation Bar */
     .navbar {
       background-color: #a81c2d;
       color: #ffffff;
@@ -104,7 +100,6 @@
       z-index: 500;
     }
 
-    /* Triple Dot Menu Button */
     .nav-left {
       font-size: 1.6rem;
       cursor: pointer;
@@ -127,7 +122,6 @@
       transform: scale(0.92);
     }
 
-    /* Dropdown Filter Box */
     .dropdown-filter-panel {
       display: none;
       position: absolute;
@@ -196,7 +190,6 @@
       background: rgba(255, 255, 255, 0.12);
     }
 
-    /* Container */
     .container {
       max-width: 1200px;
       width: 100%;
@@ -221,7 +214,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* Circular Channel Grid */
     .channel-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -286,7 +278,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* Modal Video Popup */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -294,7 +285,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       z-index: 1000;
@@ -377,9 +368,10 @@
     }
 
     .error-link {
-      color: #f87171;
+      color: #38bdf8;
       text-decoration: underline;
       cursor: pointer;
+      margin-left: 8px;
     }
 
     @media (max-width: 600px) {
@@ -406,22 +398,17 @@
 </head>
 <body>
 
-  <!-- Dynamic Animated Color Gradient Background Glow -->
   <div class="dynamic-bg-glow" id="dynamicBg"></div>
 
-  <!-- Fixed Top-Right Home Button -->
   <a href="../" class="root-home-btn" title="Back to Home">
     <img src="https://i.postimg.cc/yd4m5DsN/home.png" alt="Home">
   </a>
 
-  <!-- Fixed Top-Middle Logo -->
   <img src="https://i.postimg.cc/Mpmd1bST/logo.png" alt="Logo" class="top-logo">
 
-  <!-- Top Red Navbar -->
   <header class="navbar">
     <div class="nav-left" id="menuToggleBtn" title="Search & Categories">⋮</div>
     
-    <!-- Hidden Dropdown Filter Panel -->
     <div class="dropdown-filter-panel" id="dropdownFilter">
       <div>
         <label for="search-box">Search Channel</label>
@@ -436,19 +423,16 @@
     </div>
   </header>
 
-  <!-- Container -->
   <main class="container">
     <div class="header-bar">
       <h1 class="page-title">Live Sports</h1>
     </div>
 
-    <!-- Circle Grid -->
     <div id="channel-grid" class="channel-grid">
       <p style="color:#94a3b8;">Loading channels...</p>
     </div>
   </main>
 
-  <!-- Modal Video Player Popup -->
   <div id="player-modal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -460,15 +444,24 @@
       </div>
       <div class="modal-footer">
         <span id="stream-status" class="status-badge">Connecting...</span>
-        <a id="modal-vlc-link" href="#" target="_blank" class="error-link" style="display:none;">Open Stream Link</a>
+        <div>
+          <button id="retry-btn" class="error-link" style="background:none; border:none; display:none;" onclick="retryWithNextProxy()">Try Alternative Proxy</button>
+          <a id="modal-vlc-link" href="#" target="_blank" class="error-link" style="display:none;">Open in VLC/External Player</a>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // m3u file-er somvobyo nam (apnar folder-e thaka file khujbe)
-    const M3U_FILES = ['Serbien Sport tv.m3u', 'sport.m3u', 'tv.m3u'];
-    const PROXY_BASE = "https://bdtv.balaramdey.workers.dev/?url=";
+    const M3U_FILES = ['Serbien Sport tv.m3u', 'sport.m3u'];
+    
+    // Multiple CORS Proxies for Serbian and international streams
+    const PROXY_LIST = [
+      "", // First try direct
+      "https://bdtv.balaramdey.workers.dev/?url=",
+      "https://corsproxy.io/?url=",
+      "https://api.allorigins.win/raw?url="
+    ];
 
     const channelGrid = document.getElementById('channel-grid');
     const categorySelect = document.getElementById('category-filter');
@@ -482,13 +475,13 @@
     const modalTitle = document.getElementById('modal-channel-name');
     const modalStatus = document.getElementById('stream-status');
     const modalVlcLink = document.getElementById('modal-vlc-link');
+    const retryBtn = document.getElementById('retry-btn');
 
     let allChannels = [];
     let hls = null;
     let currentChannel = null;
-    let triedProxy = false;
+    let currentProxyIndex = 0;
 
-    // Toggle Dropdown Filter
     menuToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       dropdownFilter.classList.toggle('active');
@@ -517,7 +510,7 @@
 
       try {
         if (!loadedText) {
-          throw new Error("M3U file not found! Apnar folder-e 'Serbien Sport tv.m3u' ba 'sport.m3u' file-ti rakhun.");
+          throw new Error("M3U file not found!");
         }
 
         allChannels = parseM3U(loadedText);
@@ -633,63 +626,84 @@
 
     function openPlayerModal(channel) {
       currentChannel = channel;
-      triedProxy = false;
+      currentProxyIndex = 0;
       modalTitle.textContent = channel.name;
       modalVlcLink.href = channel.url;
       modalVlcLink.style.display = 'none';
+      retryBtn.style.display = 'none';
       modalStatus.textContent = "Connecting stream...";
       modalStatus.style.color = "#34d399";
       modal.classList.add('active');
 
       applyChannelGradient(channel);
       dropdownFilter.classList.remove('active');
-      playStream(channel.url);
+      startPlayback();
     }
 
-    function playStream(url) {
+    function getFormattedUrl(rawUrl, proxyPrefix) {
+      if (!proxyPrefix) return rawUrl;
+      return proxyPrefix + encodeURIComponent(rawUrl);
+    }
+
+    function startPlayback() {
       if (hls) {
         hls.destroy();
       }
+
+      const activeUrl = getFormattedUrl(currentChannel.url, PROXY_LIST[currentProxyIndex]);
 
       if (Hls.isSupported()) {
         hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
-          manifestLoadingTimeOut: 20000,
-          levelLoadingTimeOut: 20000,
-          fragLoadingTimeOut: 20000,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60
+          manifestLoadingTimeOut: 15000,
+          levelLoadingTimeOut: 15000,
+          fragLoadingTimeOut: 15000
         });
 
-        hls.loadSource(url);
+        hls.loadSource(activeUrl);
         hls.attachMedia(modalVideo);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           modalVideo.play().catch(() => {});
-          modalStatus.textContent = triedProxy ? "● Live (Proxy Mode)" : "● Live Playing";
+          modalStatus.textContent = currentProxyIndex === 0 ? "● Live Playing" : `● Live Playing (Proxy #${currentProxyIndex})`;
           modalStatus.style.color = "#34d399";
+          retryBtn.style.display = 'none';
+          modalVlcLink.style.display = 'none';
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
-            if (!triedProxy && currentChannel) {
-              triedProxy = true;
-              modalStatus.textContent = "Direct stream failed, switching to proxy...";
-              modalStatus.style.color = "#fbbf24";
-              playStream(PROXY_BASE + encodeURIComponent(currentChannel.url));
-            } else {
-              hls.destroy();
-              modalStatus.textContent = "Stream playback failed.";
-              modalStatus.style.color = "#f87171";
-              modalVlcLink.style.display = 'inline';
-            }
+            handleStreamError();
           }
         });
       } else if (modalVideo.canPlayType('application/vnd.apple.mpegurl')) {
-        modalVideo.src = url;
+        modalVideo.src = activeUrl;
         modalVideo.play().catch(() => {});
       }
+    }
+
+    function handleStreamError() {
+      if (currentProxyIndex < PROXY_LIST.length - 1) {
+        currentProxyIndex++;
+        modalStatus.textContent = `Retrying via Proxy (#${currentProxyIndex})...`;
+        modalStatus.style.color = "#fbbf24";
+        startPlayback();
+      } else {
+        if (hls) {
+          hls.destroy();
+          hls = null;
+        }
+        modalStatus.textContent = "Playback blocked by source (Token / CORS).";
+        modalStatus.style.color = "#f87171";
+        retryBtn.style.display = 'inline';
+        modalVlcLink.style.display = 'inline';
+      }
+    }
+
+    function retryWithNextProxy() {
+      currentProxyIndex = 1;
+      startPlayback();
     }
 
     function closePlayerModal() {
