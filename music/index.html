@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bdey Music Pro</title>
+  
+  <!-- Favicon & PWA App Icons -->
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Theme & Mobile App Configurations -->
+  <meta name="theme-color" content="#030303">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Music Pro">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Multi-Gradient Canvas -->
+  <div class="mesh-bg" id="dynamicBg"></div>
+  <div class="mesh-overlay"></div>
+
+  <div class="app-layout">
+    <!-- Desktop Body Wrapper -->
+    <div class="main-wrapper">
+      <!-- Desktop Left Sidebar -->
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+          <span>Music <span class="premium-badge">PRO</span></span>
+        </div>
+        <nav class="nav-links">
+          <button class="nav-btn active" data-nav="home">
+            <img src="icon/home.png" alt="Home" class="sidebar-icon">
+            <span>Home</span>
+          </button>
+          <button class="nav-btn" data-nav="explore">
+            <img src="icon/explore.png" alt="Explore" class="sidebar-icon">
+            <span>Explore</span>
+          </button>
+          <button class="nav-btn" data-nav="moodmix">
+            <img src="icon/moods.png" alt="Moods" class="sidebar-icon">
+            <span>Mood & Mixes</span>
+          </button>
+          <button class="nav-btn" data-nav="languages">
+            <img src="icon/language.png" alt="Languages" class="sidebar-icon">
+            <span>Languages</span>
+          </button>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div class="quick-links">
+          <span class="ql-label">QUICK DISCOVERY</span>
+          <button class="ql-btn" data-filter="Arijit Singh">🎤 Arijit Singh</button>
+          <button class="ql-btn" data-filter="Sonu Nigam">🎤 Sonu Nigam</button>
+          <button class="ql-btn" data-filter="Rabindra Sangeet">🎼 Rabindra Sangeet</button>
+          <button class="ql-btn" data-filter="Bengali Hits">🇧🇩 Bengali Hits</button>
+          <button class="ql-btn" data-filter="Bollywood Classics">🇮🇳 Bollywood Classics</button>
+          <button class="ql-btn" data-filter="Punjabi Hits">🔥 Punjabi Hits</button>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="main-content" id="mainContent">
+        <header class="topbar">
+          <div class="search-container">
+            <div class="search-box">
+              <input type="text" id="searchInput" placeholder="Search songs, artists, albums..." autocomplete="off">
+              <button id="searchBtn">
+                <img src="icon/search.png" alt="Search" class="search-icon">
+              </button>
+              <div class="search-suggestions" id="searchSuggestions"></div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Dynamic Category Filter Chips -->
+        <div class="filter-chips" id="chipsContainer"></div>
+
+        <!-- Main Feed Container -->
+        <section class="feed-section" id="feedSection">
+          <div class="section-header">
+            <h2 id="sectionTitle">Recently Played</h2>
+            <span class="badge-320">Pure 320kbps HQ</span>
+          </div>
+          <div id="dynamicContainer">
+            <div class="card-grid" id="songsGrid">
+              <p class="status-msg">Loading music...</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Bottom Persistent Mini Player -->
+    <footer class="player-bar" id="playerBar">
+      <div class="mini-progress-bar">
+        <div class="mini-progress-fill" id="miniProgressFill"></div>
+      </div>
+
+      <div class="player-track-info" id="openFullPlayerTrigger">
+        <div class="thumb-wrapper">
+          <img id="playerThumb" src="icon.png" alt="Cover" onerror="this.src='icon.png'">
+          <div class="sound-wave" id="soundWave">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="meta-texts">
+          <div class="marquee-wrapper">
+            <div class="player-title marquee-content" id="playerTitle">No song playing</div>
+          </div>
+          <div class="marquee-wrapper">
+            <div class="player-artist marquee-content" id="playerArtist">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="player-center">
+        <div class="player-controls">
+          <button id="shuffleBtn" class="ctrl-btn sub-ctrl shuffle-btn" title="Shuffle">
+            <img id="shuffleIcon" src="icon/suffel.png" alt="Shuffle" class="btn-icon">
+          </button>
+          <button id="prevBtn" class="ctrl-btn" title="Previous">⏮</button>
+          <button id="playPauseBtn" class="ctrl-btn main-ctrl" title="Play/Pause">
+            <img id="playPauseIcon" src="icon/play.png" alt="Play" class="main-icon">
+          </button>
+          <button id="nextBtn" class="ctrl-btn" title="Next">⏭</button>
+          <button id="repeatBtn" class="ctrl-btn sub-ctrl repeat-btn" title="Repeat">
+            <img id="repeatIcon" src="icon/repeatoff.png" alt="Repeat" class="btn-icon">
+          </button>
+        </div>
+        <div class="progress-container">
+          <span id="currentTime">0:00</span>
+          <input type="range" id="progressBar" value="0" min="0" max="100">
+          <span id="durationTime">0:00</span>
+        </div>
+      </div>
+
+      <div class="player-extra">
+        <button id="likeBtn" class="ctrl-btn like-btn" title="Like">♡</button>
+        <span class="vol-icon">🔊</span>
+        <input type="range" id="volumeBar" min="0" max="1" step="0.05" value="0.85">
+        <button id="expandDesktopBtn" class="ctrl-btn sub-ctrl" title="Fullscreen">⛶</button>
+      </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+      <button class="b-nav-btn active" data-nav="home" title="Home">
+        <img src="icon/home.png" alt="Home" class="b-nav-icon">
+      </button>
+      <button class="b-nav-btn" data-nav="explore" title="Explore">
+        <img src="icon/explore.png" alt="Explore" class="b-nav-icon">
+      </button>
+      <button class="b-nav-btn" data-nav="moodmix" title="Moods">
+        <img src="icon/moods.png" alt="Moods" class="b-nav-icon">
+      </button>
+      <button class="b-nav-btn" data-nav="languages" title="Languages">
+        <img src="icon/language.png" alt="Languages" class="b-nav-icon">
+      </button>
+    </nav>
+  </div>
+
+  <!-- Fullscreen Swipeable Overlay Player -->
+  <div class="fullscreen-player" id="fullscreenPlayer">
+    <div class="fs-bg-glow" id="fsBgGlow"></div>
+    <div class="fs-header">
+      <button class="fs-btn" id="closeFsPlayer" title="Collapse">
+        <img src="icon/down.png" alt="Close" class="fs-down-icon">
+      </button>
+      <div class="fs-header-meta">
+        <span class="fs-header-title">NOW PLAYING</span>
+        <span class="fs-badge-320">HQ 320 KBPS</span>
+      </div>
+      <button class="fs-btn" id="fsShareBtn">⋮</button>
+    </div>
+
+    <div class="fs-body">
+      <div class="fs-artwork-container" id="fsSwipeZone">
+        <div class="fs-artwork-glow" id="fsArtGlow"></div>
+        <div class="fs-artwork" id="fsArtworkCard">
+          <img id="fsThumb" src="icon.png" alt="Artwork" onerror="this.src='icon.png'">
+          <div class="fs-spectrum-overlay" id="fsSpectrumOverlay">
+            <canvas id="fsSpectrumCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="fs-track-details">
+        <div class="fs-meta">
+          <div class="marquee-wrapper fs-marquee-wrapper">
+            <div class="fs-title marquee-content" id="fsTitle">No song playing</div>
+          </div>
+          <div class="marquee-wrapper fs-marquee-wrapper">
+            <div class="fs-artist marquee-content" id="fsArtist">-</div>
+          </div>
+        </div>
+        <button class="fs-like-btn" id="fsLikeBtn">♡</button>
+      </div>
+
+      <div class="fs-timeline">
+        <input type="range" id="fsProgressBar" value="0" min="0" max="100">
+        <div class="fs-times">
+          <span id="fsCurrentTime">0:00</span>
+          <span id="fsDurationTime">0:00</span>
+        </div>
+      </div>
+
+      <div class="fs-controls">
+        <button id="fsShuffleBtn" class="ctrl-btn fs-sub-btn shuffle-btn">
+          <img id="fsShuffleIcon" src="icon/suffel.png" alt="Shuffle" class="fs-btn-icon">
+        </button>
+        <button id="fsPrevBtn" class="ctrl-btn fs-nav-btn">⏮</button>
+        <button id="fsPlayPauseBtn" class="ctrl-btn fs-main-btn">
+          <img id="fsPlayPauseIcon" src="icon/play.png" alt="Play" class="fs-main-icon">
+        </button>
+        <button id="fsNextBtn" class="ctrl-btn fs-nav-btn">⏭</button>
+        <button id="fsRepeatBtn" class="ctrl-btn fs-sub-btn repeat-btn">
+          <img id="fsRepeatIcon" src="icon/repeatoff.png" alt="Repeat" class="fs-btn-icon">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioElement" preload="auto" crossorigin="anonymous"></audio>
+  <script src="app.js"></script>
+</body>
+</html>

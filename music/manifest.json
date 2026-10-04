@@ -1,0 +1,30 @@
+{
+  "name": "Bdey Music",
+  "short_name": "BdeymusiC",
+  "description": "High Quality 320kbps Online Music Streamer &amp; Player",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#030303",
+  "theme_color": "#3d1e1e",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "1.01",
+  "lang": "en",
+  "categories": [
+    "multimedia",
+    "music"
+  ]
+}
