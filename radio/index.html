@@ -21,8 +21,50 @@
     min-height: 100vh;
     min-height: 100dvh;
     margin: 0;
-    padding: 80px 16px 16px; /* Added top padding to prevent overlap with fixed logo */
+    padding: 80px 16px 16px;
     font-family: 'Courier New', monospace;
+  }
+
+  /* Fixed Top-Right Root Home Button */
+  .root-home-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 10000;
+    width: 44px;
+    height: 44px;
+    background: rgba(18, 22, 25, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .root-home-btn img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+    transition: transform 0.25s ease;
+  }
+
+  .root-home-btn:hover {
+    transform: scale(1.1);
+    background: rgba(28, 34, 40, 0.85);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.85);
+  }
+
+  .root-home-btn:hover img {
+    transform: scale(1.08);
+  }
+
+  .root-home-btn:active {
+    transform: scale(0.92);
   }
 
   /* Fixed Top-Middle Logo */
@@ -243,9 +285,27 @@
     box-shadow: none;
     transform: none;
   }
+
+  @media (max-width: 600px) {
+    .root-home-btn {
+      top: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+    }
+    .root-home-btn img {
+      width: 20px;
+      height: 20px;
+    }
+  }
 </style>
 </head>
 <body>
+
+<!-- Fixed Top Right Home Button -->
+<a href="../" class="root-home-btn" title="Back to Home">
+  <img src="https://i.postimg.cc/yd4m5DsN/home.png" alt="Home">
+</a>
 
 <img src="logo.png" alt="bdeyRadio Logo" class="top-logo">
 
