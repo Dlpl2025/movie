@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>bdeyRadio</title>
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="icon.png">
+<!-- HLS.js for .m3u8 live stream playback -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #1e1b18;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 80px 16px 16px; /* Added top padding to prevent overlap with fixed logo */
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Fixed Top-Middle Logo */
+  .top-logo {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-height: 50px;
+    width: auto;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  /* Responsive Radio Cabinet */
+  .radio-chassis {
+    width: 100%;
+    max-width: 440px;
+    background: linear-gradient(145deg, #5c3a21, #3d2314);
+    border: 8px solid #2a180d;
+    border-radius: 24px;
+    padding: 24px 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
+    color: #ffd89b;
+  }
+
+  /* Band Selector Switch */
+  .band-selector-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .band-switch-track {
+    display: flex;
+    background: #1a0f07;
+    border: 2px solid #3d2314;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .band-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #8c6d48;
+    font-size: 0.9rem;
+    font-weight: 900;
+    font-family: inherit;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s ease;
+  }
+
+  .band-btn:hover {
+    color: #e5bf83;
+  }
+
+  .band-btn.active {
+    background: linear-gradient(180deg, #d8ab6b 0%, #8a5823 100%);
+    color: #23150b;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+
+  .band-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  /* Speaker Grille */
+  .speaker-grille {
+    height: 110px;
+    background: repeating-linear-gradient(
+      0deg,
+      #1f140d,
+      #1f140d 3px,
+      #442a17 4px,
+      #442a17 6px
+    );
+    border-radius: 12px;
+    border: 3px solid #23150b;
+    margin-bottom: 20px;
+  }
+
+  /* Analog Dial Display */
+  .tuner-display {
+    background: #eedc9a;
+    color: #2b1f0d;
+    padding: 14px 10px;
+    border-radius: 8px;
+    border: 4px solid #1a0f07;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);
+    text-align: center;
+    margin-bottom: 25px;
+    min-height: 58px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .station-name {
+    font-size: 1.05rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .station-freq {
+    font-size: 0.8rem;
+    color: #6e4e24;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Control Panel Layout */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    width: 100%;
+  }
+
+  /* Horizontal Volume Slider */
+  .volume-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 14px;
+    background: #1a0f07;
+    border-radius: 7px;
+    outline: none;
+    border: 2px solid #3d2314;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    cursor: pointer;
+  }
+
+  .volume-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 32px;
+    background: linear-gradient(180deg, #d8ab6b, #8a5823);
+    border: 2px solid #23150b;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+  }
+
+  .volume-bar::-moz-range-thumb {
+    width: 22px;
+    height: 32px;
+    background: linear-gradient(180deg, #d8ab6b, #8a5823);
+    border: 2px solid #23150b;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Channel Arrows Container */
+  .arrow-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    width: 100%;
+  }
+
+  /* Antique Brass Push Buttons */
+  .vintage-arrow-btn {
+    width: 68px;
+    height: 48px;
+    background: linear-gradient(180deg, #d8ab6b 0%, #8a5823 100%);
+    border: 2px solid #23150b;
+    border-radius: 8px;
+    color: #23150b;
+    font-size: 1.4rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #23150b, 0 5px 8px rgba(0, 0, 0, 0.6);
+    transition: all 0.05s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .vintage-arrow-btn:active {
+    box-shadow: 0 1px 0 #23150b, 0 2px 4px rgba(0, 0, 0, 0.6);
+    transform: translateY(3px);
+  }
+
+  .vintage-arrow-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+</style>
+</head>
+<body>
+
+<img src="logo.png" alt="bdeyRadio Logo" class="top-logo">
+
+<div class="radio-chassis">
+  <div class="band-selector-container">
+    <div class="band-switch-track">
+      <button class="band-btn active" data-band="MW">MW</button>
+      <button class="band-btn" data-band="SW">SW</button>
+      <button class="band-btn" data-band="FM">FM</button>
+    </div>
+    <span class="band-label">Band</span>
+  </div>
+
+  <div class="speaker-grille"></div>
+
+  <div class="tuner-display">
+    <div class="station-name" id="stationName">---</div>
+    <div class="station-freq" id="stationFreq">---</div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <input type="range" id="volSlider" class="volume-bar" min="0" max="1" step="0.01" value="0.7">
+      <span>Volume</span>
+    </div>
+
+    <div class="control-group">
+      <div class="arrow-buttons">
+        <button class="vintage-arrow-btn" id="prevBtn" title="Previous Station">&lt;</button>
+        <button class="vintage-arrow-btn" id="nextBtn" title="Next Station">&gt;</button>
+      </div>
+      <span>Channel</span>
+    </div>
+  </div>
+</div>
+
+<audio id="radioAudio" preload="none"></audio>
+
+<script>
+  const stationCatalog = {
+    MW: [
+      { name: "Vividh Bharati", freq: "MW - Live Stream", src: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio238/hlspbaudio23864kbps.m3u8" },
+      { name: "AIR FM Rainbow", freq: "MW - Live Stream", src: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio004/hlspbaudio00464kbps.m3u8" },
+      { name: "AIR FM Gold", freq: "MW - Live Stream", src: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio00532kbps.m3u8" },
+      { name: "AIR Bangla", freq: "MW - Live Stream", src: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio137/hlspbaudio13764kbps.m3u8" },
+      { name: "AIR Kolkata A Geetanjali", freq: "MW - Live Stream", src: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio055/hlspbaudio05564kbps.m3u8" },
+      { name: "AIR Kolkata B Sanchayita", freq: "MW - Live Stream", src: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio056/hlspbaudio05664kbps.m3u8" },
+      { name: "AIR Assamese", freq: "MW - Live Stream", src: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio133/playlist.m3u8" },
+      { name: "AIR Akashvani Maitree", freq: "MW - Live Stream", src: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio245/hlspbaudio24564kbps.m3u8" },
+      { name: "AIR Silchar", freq: "MW - Live Stream", src: "https://d3hrxqn1tritdh.cloudfront.net/389a55127e012f97/389a55127e012f97.m3u8" },
+      { name: "AIR Akashvani Port Blair", freq: "MW - Live Stream", src: "https://d3hrxqn1tritdh.cloudfront.net/dc9ff2a05098df5b/dc9ff2a05098df5b.m3u8" },
+      { name: "AIR Ooty", freq: "MW - Live Stream", src: "https://d1tmej9eu7kw5c.cloudfront.net/e2ac3971fdada7d1/e2ac3971fdada7d1.m3u8" },
+      { name: "AIR Bhatinda", freq: "MW - Live Stream", src: "https://d1tmej9eu7kw5c.cloudfront.net/8651d3d0c2021750/8651d3d0c2021750.m3u8" },
+      { name: "FM Ujjayanta Agartala", freq: "MW - Live Stream", src: "https://d3hrxqn1tritdh.cloudfront.net/d65912ef9829b8c9/d65912ef9829b8c9.m3u8" },
+      { name: "AIR Bhagalpur", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/a8c78a8fe3ebebb9/a8c78a8fe3ebebb9.m3u8" },
+      { name: "AIR Agartala PC", freq: "MW - Live Stream", src: "https://d3hrxqn1tritdh.cloudfront.net/8e8696f98500ad60/8e8696f98500ad60.m3u8" },
+      { name: "AIR Dharmapuri", freq: "MW - Live Stream", src: "https://d1tmej9eu7kw5c.cloudfront.net/36378083c1be092b/36378083c1be092b.m3u8" },
+      { name: "AIR Murshidabad", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/47a45f818dd9203b/47a45f818dd9203b.m3u8" },
+      { name: "AIR Chaibasa", freq: "MW - Live Stream", src: "https://d1tmej9eu7kw5c.cloudfront.net/4b077b809c20f314/4b077b809c20f314.m3u8" },
+      { name: "Akashvani Shantiniketan", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/66249dfecaf80241/66249dfecaf80241.m3u8" },
+      { name: "Akashvani Pauri", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/101ea47cdd9c59df/101ea47cdd9c59df.m3u8" },
+      { name: "Akashvani Varanasi", freq: "MW - Live Stream", src: "https://d3hrxqn1tritdh.cloudfront.net/43290b0b741fd08f/43290b0b741fd08f.m3u8" },
+      { name: "Akashvani Prayagraj", freq: "MW - Live Stream", src: "https://d1tmej9eu7kw5c.cloudfront.net/7427fdb9d3f69c5d/7427fdb9d3f69c5d.m3u8" },
+      { name: "Akashvani Lucknow", freq: "MW - Live Stream", src: "https://d1tmej9eu7kw5c.cloudfront.net/75c01e54cb46ad29/75c01e54cb46ad29.m3u8" },
+      { name: "Akashvani Chandigarh", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/db4a912ff7882d9d/db4a912ff7882d9d.m3u8" },
+      { name: "Akashvani Dharamshala", freq: "MW - Live Stream", src: "https://d3hrxqn1tritdh.cloudfront.net/c3ae5f110a14d3ba/c3ae5f110a14d3ba.m3u8" },
+      { name: "Akashvani Shimla", freq: "MW - Live Stream", src: "https://d3hrxqn1tritdh.cloudfront.net/0b6f48bb61b49957/0b6f48bb61b49957.m3u8" },
+      { name: "Akashvani Jammu", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/42c7dca503e95fec/42c7dca503e95fec.m3u8" },
+      { name: "Akashvani Leh", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/f0dd9a4b04d3df3f/f0dd9a4b04d3df3f.m3u8" },
+      { name: "Akashvani Kathua", freq: "MW - Live Stream", src: "https://air.pc.cdn.bitgravity.com/air/live/pbaudio190/playlist.m3u8" },
+      { name: "Akashvani Kargil", freq: "MW - Live Stream", src: "https://d1cvqgmbcpg5yn.cloudfront.net/283b994f330d1e21/283b994f330d1e21.m3u8" },
+      { name: "Radio Bangladesh Betar", freq: "AM 693 kHz", src: "https://as1.digitalsynapsebd.com/proxy/bbdkka/stream" }
+    ],
+    SW: [],
+    FM: []
+  };
+
+  let currentBand = "MW";
+  let currentStationIndex = 0;
+  let hlsInstance = null;
+
+  const audio = document.getElementById('radioAudio');
+  const volSlider = document.getElementById('volSlider');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const stationName = document.getElementById('stationName');
+  const stationFreq = document.getElementById('stationFreq');
+  const bandButtons = document.querySelectorAll('.band-btn');
+
+  function stopPlayback() {
+    if (hlsInstance) {
+      hlsInstance.destroy();
+      hlsInstance = null;
+    }
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+  }
+
+  function playStream(src) {
+    stopPlayback();
+
+    if (src.includes('.m3u8')) {
+      if (Hls.isSupported()) {
+        hlsInstance = new Hls();
+        hlsInstance.loadSource(src);
+        hlsInstance.attachMedia(audio);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+          audio.play().catch(() => {});
+        });
+      } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+        audio.src = src;
+        audio.play().catch(() => {});
+      }
+    } else {
+      audio.src = src;
+      audio.play().catch(() => {});
+    }
+  }
+
+  function updateStation() {
+    const bandStations = stationCatalog[currentBand];
+
+    if (!bandStations || bandStations.length === 0) {
+      stopPlayback();
+      stationName.textContent = "NO SIGNAL";
+      stationFreq.textContent = `[ ${currentBand} BAND BLANK ]`;
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+      return;
+    }
+
+    prevBtn.disabled = false;
+    nextBtn.disabled = false;
+
+    const selected = bandStations[currentStationIndex];
+    stationName.textContent = selected.name;
+    stationFreq.textContent = `CH ${currentStationIndex + 1}/${bandStations.length} • ${selected.freq}`;
+    playStream(selected.src);
+  }
+
+  bandButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      bandButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentBand = btn.dataset.band;
+      currentStationIndex = 0;
+      updateStation();
+    });
+  });
+
+  volSlider.addEventListener('input', (e) => {
+    audio.volume = e.target.value;
+  });
+
+  prevBtn.addEventListener('click', () => {
+    const bandStations = stationCatalog[currentBand];
+    if (bandStations && bandStations.length > 0) {
+      currentStationIndex = (currentStationIndex - 1 + bandStations.length) % bandStations.length;
+      updateStation();
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    const bandStations = stationCatalog[currentBand];
+    if (bandStations && bandStations.length > 0) {
+      currentStationIndex = (currentStationIndex + 1) % bandStations.length;
+      updateStation();
+    }
+  });
+
+  audio.volume = volSlider.value;
+  updateStation();
+</script>
+
+</body>
+</html>
