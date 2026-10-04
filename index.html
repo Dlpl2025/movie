@@ -1,159 +1,327 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StreamVault - Premium Entertainment</title>
-    
-    <!-- Favicon & Touch Icons -->
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Portal</title>
+  <style>
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-    <!-- PWA & Android Meta Tags -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#07090e">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="StreamVault">
-    
-    <!-- External Libraries -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    body {
+      background-color: #030305;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
 
-    <!-- Custom CSS Link -->
-    <link rel="stylesheet" href="style.css">
+    /* Animated Red and Green Gradient Background */
+    .animated-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #070a09 0%, #020202 100%);
+    }
+
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(85px);
+      opacity: 0.45;
+      will-change: transform;
+    }
+
+    .orb-green-1 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, #00b347 0%, #006622 70%, transparent 100%);
+      top: -10%;
+      left: -12%;
+      animation: floatOrbit1 18s ease-in-out infinite alternate;
+    }
+
+    .orb-red-1 {
+      width: 540px;
+      height: 540px;
+      background: radial-gradient(circle, #cc1133 0%, #7a0014 70%, transparent 100%);
+      bottom: -12%;
+      right: -12%;
+      animation: floatOrbit2 22s ease-in-out infinite alternate;
+    }
+
+    .orb-green-2 {
+      width: 440px;
+      height: 440px;
+      background: radial-gradient(circle, #059669 0%, #047857 70%, transparent 100%);
+      bottom: 10%;
+      left: 15%;
+      animation: floatOrbit3 24s ease-in-out infinite alternate;
+    }
+
+    .orb-red-2 {
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, #be123c 0%, #881337 70%, transparent 100%);
+      top: 10%;
+      right: 15%;
+      animation: floatOrbit1 20s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes floatOrbit1 {
+      0% { transform: translate(0px, 0px) scale(1); }
+      50% { transform: translate(60px, 80px) scale(1.12); }
+      100% { transform: translate(-40px, 100px) scale(0.92); }
+    }
+
+    @keyframes floatOrbit2 {
+      0% { transform: translate(0px, 0px) scale(0.95); }
+      50% { transform: translate(-80px, -50px) scale(1.15); }
+      100% { transform: translate(30px, -90px) scale(1); }
+    }
+
+    @keyframes floatOrbit3 {
+      0% { transform: translate(0px, 0px) scale(1.08); }
+      50% { transform: translate(70px, -70px) scale(0.88); }
+      100% { transform: translate(-50px, 30px) scale(1.04); }
+    }
+
+    /* Fixed Top Center Logo (Home Button) */
+    .top-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(3, 4, 6, 0.4);
+    }
+
+    .header-logo-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 10px 0;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .header-logo-container img {
+      max-height: 52px;
+      max-width: 180px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.75));
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+
+    .header-logo-container:hover img {
+      transform: scale(1.08);
+      filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.9));
+    }
+
+    .header-logo-container:active img {
+      transform: scale(0.96);
+    }
+
+    /* Main Container */
+    main {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 980px;
+      padding: 95px 16px 35px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Grid Layout: Closer spacing and bigger size */
+    .icons-grid {
+      display: grid;
+      width: 100%;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    /* Icon Cards - No border, deep black transparent shadow */
+    .icon-card {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 200px;
+      background: rgba(14, 18, 20, 0.5);
+      border: none;
+      outline: none;
+      border-radius: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 18px 36px -6px rgba(0, 0, 0, 0.75), 
+                  0 8px 16px rgba(0, 0, 0, 0.55);
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  background 0.25s ease;
+    }
+
+    /* GIF / Icon inside Card - Bigger size with black transparent drop-shadow */
+    .icon-card img {
+      width: 78%;
+      height: 78%;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.65));
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+
+    /* Hover & Active Effects */
+    .icon-card:hover {
+      transform: translateY(-6px) scale(1.04);
+      background: rgba(22, 28, 32, 0.65);
+      box-shadow: 0 24px 44px -4px rgba(0, 0, 0, 0.88), 
+                  0 12px 22px rgba(0, 0, 0, 0.65);
+    }
+
+    .icon-card:hover img {
+      transform: scale(1.06);
+      filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.8));
+    }
+
+    .icon-card:active {
+      transform: scale(0.96);
+    }
+
+    /* Responsive for Tablets */
+    @media (max-width: 860px) {
+      .icons-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .icon-card {
+        max-width: 170px;
+        border-radius: 22px;
+      }
+      .icon-card img {
+        width: 80%;
+        height: 80%;
+      }
+    }
+
+    /* Responsive for Mobile (2 Columns x 4 Rows) */
+    @media (max-width: 580px) {
+      .top-header {
+        height: 68px;
+      }
+      .header-logo-container img {
+        max-height: 42px;
+      }
+      main {
+        padding: 85px 14px 24px;
+      }
+      .icons-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        max-width: 380px;
+      }
+      .icon-card {
+        max-width: 100%;
+        border-radius: 20px;
+        box-shadow: 0 14px 26px -4px rgba(0, 0, 0, 0.75);
+      }
+      .icon-card img {
+        width: 78%;
+        height: 78%;
+      }
+    }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col relative pb-20 md:pb-0 overflow-x-hidden">
+<body>
 
-    <div class="ambient-glow"></div>
+  <!-- Animated Red and Green Gradient Background -->
+  <div class="animated-bg">
+    <div class="glow-orb orb-green-1"></div>
+    <div class="glow-orb orb-red-1"></div>
+    <div class="glow-orb orb-green-2"></div>
+    <div class="glow-orb orb-red-2"></div>
+  </div>
 
-    <!-- টপ হেডার -->
-    <header class="glass-nav sticky top-0 z-40 px-4 sm:px-8 py-3.5">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
-                <img src="logo.png" alt="Logo" class="h-9 w-auto object-contain" onerror="this.onerror=null; this.src='icon.png';">
-                <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent hidden sm:inline">
-                    StreamVault
-                </span>
-            </div>
+  <!-- Fixed Top Header Logo (Home Button) -->
+  <header class="top-header">
+    <a href="index.html" class="header-logo-container" title="Home">
+      <img src="logo.png" alt="" />
+    </a>
+  </header>
 
-            <div class="flex-1 max-w-lg relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                <input type="text" id="searchInput" oninput="resetAndFilter()" placeholder="মুভি, সিরিজ বা ফাইল সার্চ করুন..."
-                       class="w-full bg-slate-900/80 border border-slate-700/60 rounded-full pl-10 pr-4 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400 transition shadow-inner">
-            </div>
+  <!-- 8 Animated GIF Navigation Cards linked to their folders -->
+  <main>
+    <div class="icons-grid">
+      <!-- 1. Radio -->
+      <a href="radio/index.html" class="icon-card">
+        <img src="radio.gif" alt="" />
+      </a>
 
-            <div class="flex items-center gap-2">
-                <button id="vaultBtn" onclick="handleVaultModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 bg-gradient-to-r from-rose-600 to-indigo-600 hover:brightness-110 shadow-md text-white transition">
-                    <i class="fa-solid fa-lock" id="vaultIcon"></i>
-                    <span id="vaultLabel" class="hidden sm:inline">ভল্ট</span>
-                </button>
-            </div>
-        </div>
-    </header>
+      <!-- 2. TV -->
+      <a href="tv/index.html" class="icon-card">
+        <img src="tv.gif" alt="" />
+      </a>
 
-    <!-- ক্যাটাগরি চিপস বার -->
-    <div class="z-30 px-4 sm:px-8 py-3 max-w-7xl mx-auto w-full">
-        <div id="chipsContainer" class="flex items-center gap-2 overflow-x-auto hide-scrollbar text-xs font-semibold"></div>
+      <!-- 3. Sport -->
+      <a href="sport/index.html" class="icon-card">
+        <img src="sport.gif" alt="" />
+      </a>
+
+      <!-- 4. Music -->
+      <a href="music/index.html" class="icon-card">
+        <img src="music.gif" alt="" />
+      </a>
+
+      <!-- 5. Gallary -->
+      <a href="gallary/index.html" class="icon-card">
+        <img src="gallary.gif" alt="" />
+      </a>
+
+      <!-- 6. Ebook -->
+      <a href="ebook/index.html" class="icon-card">
+        <img src="ebook.gif" alt="" />
+      </a>
+
+      <!-- 7. Magazine -->
+      <a href="magazine/index.html" class="icon-card">
+        <img src="magazine.gif" alt="" />
+      </a>
+
+      <!-- 8. Telegram -->
+      <a href="telegram/index.html" class="icon-card">
+        <img src="telegram.gif" alt="" />
+      </a>
     </div>
+  </main>
 
-    <!-- মূল কনটেন্ট গ্রিড -->
-    <main class="max-w-7xl mx-auto flex-1 w-full px-4 sm:px-8 py-2 z-10">
-        <div id="mediaGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
-        <div id="loader" class="text-center py-16">
-            <div class="inline-block w-8 h-8 border-4 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-xs text-slate-400 mt-2">ফাইল লোড হচ্ছে...</p>
-        </div>
-        <div class="text-center py-8">
-            <button id="loadMoreBtn" onclick="renderMore()" class="hidden px-6 py-2.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-full text-xs font-bold text-sky-400 hover:text-white transition shadow-lg">
-                আরও লোড করুন <i class="fa-solid fa-angles-down ml-1"></i>
-            </button>
-        </div>
-    </main>
-
-    <!-- ফ্লোটিং ইন-অ্যাপ PiP প্লেয়ার -->
-    <div id="floatingPiP" class="fixed hidden flex-col overflow-hidden bg-black shadow-2xl">
-        <div id="pipHeader" class="bg-slate-900/90 border-b border-slate-800 px-3 py-2 flex items-center justify-between text-xs text-white z-20">
-            <span id="pipTitle" class="truncate font-semibold max-w-[200px] text-[11px] text-slate-200">ভিডিও</span>
-            <div class="flex items-center gap-3">
-                <button onclick="toggleMaximizePiP()" id="maximizeBtn" class="text-slate-300 hover:text-white"><i class="fa-solid fa-expand"></i></button>
-                <button onclick="closePiP()" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-xmark text-sm"></i></button>
-            </div>
-        </div>
-        <div id="artplayerContainer" class="w-full flex-1 bg-black"></div>
-    </div>
-
-    <!-- মোবাইল বটম নেভিগেশন -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 glass-nav border-t border-slate-800/80 py-2 px-6 flex justify-between items-center z-40">
-        <button onclick="setTab('video')" id="tab-video" class="flex flex-col items-center gap-1 text-sky-400">
-            <i class="fa-solid fa-film text-base"></i>
-            <span class="text-[10px] font-bold">ভিডিও</span>
-        </button>
-        <button onclick="setTab('audio')" id="tab-audio" class="flex flex-col items-center gap-1 text-slate-400">
-            <i class="fa-solid fa-music text-base"></i>
-            <span class="text-[10px]">অডিও</span>
-        </button>
-        <button onclick="setTab('image')" id="tab-image" class="flex flex-col items-center gap-1 text-slate-400">
-            <i class="fa-solid fa-image text-base"></i>
-            <span class="text-[10px]">ছবি</span>
-        </button>
-        <button onclick="setTab('doc')" id="tab-doc" class="flex flex-col items-center gap-1 text-slate-400">
-            <i class="fa-solid fa-folder text-base"></i>
-            <span class="text-[10px]">ডকুমেন্ট</span>
-        </button>
-    </nav>
-
-    <!-- অডিও মোডাল -->
-    <div id="audioModal" class="fixed inset-0 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900/90 border border-slate-800 w-full max-w-md p-6 rounded-3xl text-center relative shadow-2xl">
-            <button onclick="closeAudioModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            <div class="w-48 h-48 mx-auto mb-6 relative flex items-center justify-center">
-                <div class="absolute inset-0 bg-sky-500/20 rounded-full blur-xl"></div>
-                <div id="audioDisc" class="w-44 h-44 rounded-full border-4 border-slate-800 bg-slate-950 flex items-center justify-center spin-vinyl shadow-2xl relative overflow-hidden">
-                    <img id="audioThumb" src="" class="absolute inset-0 w-full h-full object-cover opacity-60" onerror="this.style.display='none'">
-                    <i class="fa-solid fa-compact-disc text-5xl text-sky-400 z-10"></i>
-                </div>
-            </div>
-            <h3 id="audioTitle" class="text-sm font-bold text-white truncate mb-4 px-4">অডিও</h3>
-            <audio id="plyrControl" controls class="w-full"></audio>
-        </div>
-    </div>
-
-    <!-- ভল্ট মোডাল -->
-    <div id="vaultModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-xs p-6 rounded-3xl text-center relative">
-            <button onclick="document.getElementById('vaultModal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-3 text-lg">
-                <i class="fa-solid fa-user-lock"></i>
-            </div>
-            <h4 class="font-bold text-sm text-white mb-1">অ্যাডমিন ভল্ট</h4>
-            <p class="text-[11px] text-slate-400 mb-4">লুকানো ফাইল আনলক করতে ক্রেডেনশিয়াল দিন</p>
-            <form onsubmit="submitVault(event)" class="space-y-3">
-                <input type="text" id="vUser" required placeholder="ইউজার আইডি" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500">
-                <input type="password" id="vPass" required placeholder="পাসওয়ার্ড" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500">
-                <p id="vError" class="text-rose-500 text-[10px] hidden">লগইন সঠিক নয়!</p>
-                <button type="submit" class="w-full py-2 bg-rose-600 hover:bg-rose-500 rounded-xl text-xs font-bold text-white transition">আনলক</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- PWA Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker Registered:', reg.scope))
-                    .catch(err => console.log('Service Worker Failed:', err));
-            });
-        }
-    </script>
-
-    <!-- Custom JS Link -->
-    <script src="script.js"></script>
 </body>
 </html>
