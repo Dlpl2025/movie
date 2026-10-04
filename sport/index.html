@@ -467,7 +467,7 @@
   </div>
 
   <script>
-    const M3U_URL = 'tv.m3u';
+    const M3U_URL = 'sport.m3u';
     const PROXY_BASE = "https://bdtv.balaramdey.workers.dev/?url=";
 
     const channelGrid = document.getElementById('channel-grid');
@@ -507,7 +507,7 @@
       try {
         let response = await fetch(M3U_URL);
         if (!response.ok) {
-          response = await fetch('https://dlpl2025.github.io/travelvt/indiantv/tv.m3u');
+          response = await fetch('https://dlpl2025.github.io/travelvt/indiantv/sport.m3u');
         }
         const text = await response.text();
         allChannels = parseM3U(text);
