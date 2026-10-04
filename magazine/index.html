@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Archive Music Collection</title>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #030305;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      position: relative;
+      overflow-x: hidden;
+      padding: 90px 16px 85px;
+    }
+
+    /* Ambient Animated Background */
+    .animated-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #070a09 0%, #020202 100%);
+    }
+
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(85px);
+      opacity: 0.42;
+      will-change: transform;
+    }
+
+    .orb-green {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, #00b347 0%, transparent 70%);
+      top: -10%;
+      left: -10%;
+      animation: float1 18s ease-in-out infinite alternate;
+    }
+
+    .orb-red {
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, #cc1133 0%, transparent 70%);
+      bottom: -10%;
+      right: -10%;
+      animation: float2 22s ease-in-out infinite alternate;
+    }
+
+    @keyframes float1 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(50px, 90px) scale(1.15); }
+    }
+
+    @keyframes float2 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-70px, -60px) scale(1.1); }
+    }
+
+    /* Fixed Top-Right Root Home Button */
+    .root-home-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 10000;
+      width: 42px;
+      height: 42px;
+      background: rgba(18, 22, 25, 0.65);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      transition: transform 0.25s ease;
+    }
+
+    .root-home-btn img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+
+    .root-home-btn:hover {
+      transform: scale(1.1);
+    }
+
+    /* Fixed Top-Middle Logo */
+    .top-logo {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-height: 44px;
+      width: auto;
+      z-index: 1000;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+      pointer-events: none;
+    }
+
+    /* Main Container & Album Grid */
+    main {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .albums-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      justify-items: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .album-card {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 195px;
+      border-radius: 20px;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      background: rgba(18, 22, 26, 0.5);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.7);
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
+    }
+
+    .album-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .album-card:hover {
+      transform: translateY(-6px) scale(1.04);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+    }
+
+    .album-card:hover img {
+      transform: scale(1.08);
+    }
+
+    /* Fullscreen Popup Modal Player */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      animation: modalFade 0.25s ease forwards;
+    }
+
+    @keyframes modalFade {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-card {
+      background: linear-gradient(180deg, #111418 0%, #080a0c 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95);
+      padding: 24px;
+      gap: 16px;
+      position: relative;
+    }
+
+    .modal-card::-webkit-scrollbar {
+      display: none;
+    }
+
+    .modal-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .modal-action-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #94a3b8;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .modal-action-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .now-playing-tag {
+      text-align: center;
+    }
+
+    .now-playing-tag span {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 1.5px;
+    }
+
+    .now-playing-tag small {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+    }
+
+    .album-showcase-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 290px;
+      margin: 4px auto 8px;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 35px rgba(255, 255, 255, 0.04);
+      position: relative;
+    }
+
+    .album-showcase-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .track-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .track-meta-text {
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .track-meta-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.2px;
+    }
+
+    .track-meta-artist {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .like-heart-btn {
+      background: none;
+      border: none;
+      font-size: 1.35rem;
+      color: #64748b;
+      cursor: pointer;
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .like-heart-btn.liked {
+      color: #ff2a55;
+    }
+
+    .progress-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .seek-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 5px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .seek-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ff2a55;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 42, 85, 0.7);
+    }
+
+    .time-stamps {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      margin: 8px 0;
+    }
+
+    .ctrl-sub-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: color 0.15s, transform 0.15s;
+    }
+
+    .ctrl-sub-btn:hover {
+      color: #fff;
+      transform: scale(1.1);
+    }
+
+    .ctrl-sub-btn.active {
+      color: #ff2a55;
+    }
+
+    .play-pause-circle {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #050709;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.55rem;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.25);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .play-pause-circle:hover {
+      transform: scale(1.06);
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.35);
+    }
+
+    .playlist-toggle-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 12px;
+    }
+
+    .track-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .track-list-container::-webkit-scrollbar {
+      width: 4px;
+    }
+    .track-list-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+    }
+
+    .track-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      transition: all 0.2s ease;
+    }
+
+    .track-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .track-item.active {
+      background: rgba(255, 42, 85, 0.12);
+      border: 1px solid rgba(255, 42, 85, 0.35);
+      color: #ff2a55;
+      font-weight: 700;
+    }
+
+    .track-title-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 82%;
+    }
+
+    /* Minimized Floating Bottom Player Bar */
+    .mini-player-bar {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      width: calc(100% - 32px);
+      max-width: 530px;
+      background: rgba(18, 22, 28, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 20px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 1500;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.85);
+      cursor: pointer;
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .mini-player-bar.active {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .mini-left-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .mini-art {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .mini-meta {
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .mini-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mini-artist {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mini-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-btn {
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      font-size: 1.05rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      transition: color 0.15s, transform 0.15s;
+    }
+
+    .mini-btn:hover {
+      color: #fff;
+      transform: scale(1.1);
+    }
+
+    .mini-btn:active {
+      transform: scale(0.92);
+    }
+
+    .mini-play-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #000;
+      font-size: 0.95rem;
+      padding: 0;
+    }
+
+    .mini-play-btn:hover {
+      background: #f1f5f9;
+      color: #000;
+    }
+
+    .status-text {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      padding: 20px 0;
+    }
+
+    @media (max-width: 860px) {
+      .albums-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 580px) {
+      body {
+        padding-top: 75px;
+      }
+      .albums-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        max-width: 360px;
+      }
+      .album-card {
+        border-radius: 16px;
+      }
+      .modal-card {
+        padding: 20px 16px;
+        border-radius: 26px;
+      }
+      .album-showcase-box {
+        max-width: 240px;
+      }
+      .mini-controls {
+        gap: 5px;
+      }
+      .mini-btn {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="animated-bg">
+    <div class="glow-orb orb-green"></div>
+    <div class="glow-orb orb-red"></div>
+  </div>
+
+  <a href="../" class="root-home-btn" title="Back to Home">
+    <img src="https://i.postimg.cc/yd4m5DsN/home.png" alt="Home">
+  </a>
+
+  <img src="https://i.postimg.cc/Mpmd1bST/logo.png" alt="Logo" class="top-logo">
+
+  <main>
+    <div class="albums-grid" id="albumsGrid"></div>
+  </main>
+
+  <!-- Fullscreen Modal Player -->
+  <div class="modal-overlay" id="playerModal">
+    <div class="modal-card">
+      <div class="modal-top-bar">
+        <button class="modal-action-btn" id="minimizeBtn" title="Minimize">⌄</button>
+        <div class="now-playing-tag">
+          <span>NOW PLAYING</span>
+          <small>HQ 320KBPS</small>
+        </div>
+        <button class="modal-action-btn" id="closeModalBtn" title="Close">✕</button>
+      </div>
+
+      <div class="album-showcase-box">
+        <img id="modalAlbumArt" src="" alt="Album Artwork">
+      </div>
+
+      <div class="track-meta-row">
+        <div class="track-meta-text">
+          <div class="track-meta-title" id="modalTrackName">Select a song</div>
+          <div class="track-meta-artist" id="modalAlbumTitle">Album Collection</div>
+        </div>
+        <button class="like-heart-btn" id="likeBtn">♡</button>
+      </div>
+
+      <div class="progress-section">
+        <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0">
+        <div class="time-stamps">
+          <span id="currentTime">0:00</span>
+          <span id="durationTime">0:00</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="ctrl-sub-btn" id="shuffleBtn" title="Shuffle">🔀</button>
+        <button class="ctrl-sub-btn" id="prevTrackBtn" title="Previous">⏮</button>
+        <button class="play-pause-circle" id="playPauseBtn" title="Play">▶</button>
+        <button class="ctrl-sub-btn" id="nextTrackBtn" title="Next">⏭</button>
+        <button class="ctrl-sub-btn" id="repeatBtn" title="Repeat">🔁</button>
+      </div>
+
+      <div class="playlist-toggle-header">Tracks in this collection</div>
+      <div class="track-list-container" id="playlist">
+        <div class="status-text">Loading songs...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimized Floating Player Bar -->
+  <div class="mini-player-bar" id="miniPlayerBar">
+    <div class="mini-left-info" id="maximizeTrigger">
+      <img id="miniArt" class="mini-art" src="" alt="Cover">
+      <div class="mini-meta">
+        <div class="mini-title" id="miniTitle">Song Title</div>
+        <div class="mini-artist" id="miniArtist">Artist / Album</div>
+      </div>
+    </div>
+    <div class="mini-controls">
+      <button class="mini-btn" id="miniPrevBtn" title="Previous">⏮</button>
+      <button class="mini-btn mini-play-btn" id="miniPlayPauseBtn" title="Play/Pause">▶</button>
+      <button class="mini-btn" id="miniNextBtn" title="Next">⏭</button>
+      <button class="mini-btn" id="miniCloseBtn" title="Stop & Close">✕</button>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" preload="metadata"></audio>
+
+  <script>
+    const ALBUMS = [
+      // 1st Position: Non-Stop Party Jukebox 2024
+      { id: "non-stop-party-jukebox-2024", title: "Non Stop Party Jukebox 2024" },
+
+      // Baki albums
+
+      { id: "bollywood-legendary-singers-asha-bhosle_202407", title: "Asha Bhsohle Hits collection" },
+      { id: "begum-akhtar-dewana-banana-hai-begum-akhtar-4-pack", title: "begum-akhtar-4-pack" },
+      { id: "vikram-sampath-salem-godavari-two", title: "Women of the records" },
+      { id: "hindi-non-film-hitz", title: "hindi non film hitz" },
+      { id: "urdu-classical-hits", title: "urdu-classical-hits" },
+      { id: "rare-collection-of-immortal-music", title: "rare-collection-of-immortal-music" },
+      { id: "diner-sheshe-ghumer", title: "Rabindranath Thakur" },
+      { id: "tribute-to-rishi-kapoor-4-september-1952-30-april-2020", title: "tribute-to-rishi-kapoor-4-september-1952-30-april-2020" },
+      { id: "evergreen-old-hindi-instrumental-songs-2020_202004", title: "evergreen-old-hindi-instrumental-songs-2020_202004" },
+      { id: "goldenvoicesfromindia_20200205", title: "golden voices from india" },
+      { id: "0742-bhule-bhatke-logon-nastik", title: "Lata Mangeshkar - 1-903" },
+      { id: "1083-ae-chand-kal-jo-aana-devta", title: "Lata Mangeshkar - 904 - 2003" },
+      { id: "2750-jab-se-huyi-us-paar", title: "Lata Mangeshkar - 2007-3570" },
+      { id: "3978-chanda-se-honga-wo-pyara-main-bhi-ladki-hoo", title: "Lata Mangeshkar - 3575 - 5000" },
+      { id: "r-20949364-1636726204-2169", title: "Ustad Amzad Ali Khan" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+      { id: "", title: "" },
+
+
+      { id: "bollywood-legendary-singers-lata-mangeshkar_20240722", title: "Lata Ji HITS collcetion" },
+      { id: "a-tribute-r-d-burman-1939-1994", title: "A tribute to R D Burman 1939-1994" },
+      { id: "bollywood-legendary-singers-mukesh", title: "Mukesh Hits song" },
+      { id: "diwana-banana-hai-to", title: "Begum Akhtar" },
+      { id: "01jabkoibaatbigadjaaye", title: "Kumar shaanu Hits song" },
+      { id: "god-bless-semut-hitam_202502", title: "God Bless - Semut Hitam" },
+      { id: "god-bless-asasi_202502", title: "God Bless - Asasi" },
+      { id: "bakas-ng-lumipas", title: "Bakas Ng Lumipas" },
+      { id: "04.-nights-in-white-satin", title: "Nights in White Satin" },
+      { id: "voice_20231220", title: "Voice" },
+      { id: "07.-i-dont-want-to-be-alone-tonight", title: "I Don't Want To Be Alone Tonight" },
+      { id: "salena-jones-when-i-fall-in-love", title: "Salena Jones - When I Fall In Love" },
+      { id: "salena-jones-all-i-ask-of-you", title: "Salena Jones - All I Ask Of You" },
+      { id: "salena-jones-let-it-be", title: "Salena Jones - Let It Be" },
+      { id: "salena-jones-you-are-always-on-my-mind-mary-jane", title: "Salena Jones - You Are Always On My Mind" },
+      { id: "04-listen-to-your-heart", title: "Listen To Your Heart" },
+      { id: "05-spending-my-time", title: "Spending My Time" },
+      { id: "rolling-stones-midnight-rambler", title: "Rolling Stones - Midnight Rambler" },
+      { id: "5-the-rolling-stones-out-of-time", title: "The Rolling Stones - Out of Time" },
+      { id: "114-the-rolling-stones-let-it-loose", title: "The Rolling Stones - Let It Loose" },
+      { id: "08-emotional-rescue-remastered-2009", title: "Rolling Stones - Emotional Rescue" },
+      { id: "rolling-stones-get-off-of-my-cloud", title: "Rolling Stones - Get Off Of My Cloud" },
+      { id: "18-rolling-stones-always-wanted-more", title: "Rolling Stones - Always Wanted More" },
+      { id: "10-abba-chiquitita-spanish-version", title: "ABBA - Chiquitita (Spanish Version)" },
+      { id: "201-munich-hilton", title: "Munich Hilton" },
+      { id: "rolling-stones-how-can-i-stop", title: "Rolling Stones - How Can I Stop" },
+      { id: "11-abba-chiquitita_202312", title: "ABBA - Chiquitita" },
+      { id: "07-mr.-bad-guy_202311", title: "Mr. Bad Guy" },
+      { id: "13-i-was-born-to-love-you-12-version-bonus-track", title: "I Was Born To Love You" },
+      { id: "rolling-stones-something-happened_202310", title: "Rolling Stones - Something Happened" },
+      { id: "rolling-stones-memory-motel", title: "Rolling Stones - Memory Motel" },
+      { id: "11-the-rolling-stones-goin-home", title: "The Rolling Stones - Goin' Home" }
+    ];
+
+    const albumsGrid = document.getElementById("albumsGrid");
+    const playerModal = document.getElementById("playerModal");
+    const miniPlayerBar = document.getElementById("miniPlayerBar");
+    const modalAlbumArt = document.getElementById("modalAlbumArt");
+    const modalAlbumTitle = document.getElementById("modalAlbumTitle");
+    const modalTrackName = document.getElementById("modalTrackName");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const playlistContainer = document.getElementById("playlist");
+
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const miniPlayPauseBtn = document.getElementById("miniPlayPauseBtn");
+    const prevTrackBtn = document.getElementById("prevTrackBtn");
+    const nextTrackBtn = document.getElementById("nextTrackBtn");
+    const miniPrevBtn = document.getElementById("miniPrevBtn");
+    const miniNextBtn = document.getElementById("miniNextBtn");
+    const seekSlider = document.getElementById("seekSlider");
+    const currentTimeEl = document.getElementById("currentTime");
+    const durationTimeEl = document.getElementById("durationTime");
+    const likeBtn = document.getElementById("likeBtn");
+    const minimizeBtn = document.getElementById("minimizeBtn");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const maximizeTrigger = document.getElementById("maximizeTrigger");
+    const miniCloseBtn = document.getElementById("miniCloseBtn");
+
+    const miniArt = document.getElementById("miniArt");
+    const miniTitle = document.getElementById("miniTitle");
+    const miniArtist = document.getElementById("miniArtist");
+
+    let currentSongs = [];
+    let currentSongIndex = 0;
+    let currentDownloadBase = "";
+    let isSeeking = false;
+    let currentActiveAlbum = null;
+
+    function renderAlbumGrid() {
+      albumsGrid.innerHTML = "";
+      ALBUMS.forEach((album) => {
+        const card = document.createElement("div");
+        card.className = "album-card";
+        card.title = album.title;
+
+        const imgUrl = `https://archive.org/services/img/${album.id}`;
+        card.innerHTML = `<img src="${imgUrl}" alt="${album.title}" loading="lazy" onerror="this.src='https://archive.org/images/notfound.png'" />`;
+        
+        card.onclick = () => openAlbumModal(album);
+        albumsGrid.appendChild(card);
+      });
+    }
+
+    async function openAlbumModal(album) {
+      currentActiveAlbum = album;
+      modalAlbumTitle.textContent = album.title;
+      miniArtist.textContent = album.title;
+
+      const imgUrl = `https://archive.org/services/img/${album.id}`;
+      modalAlbumArt.src = imgUrl;
+      miniArt.src = imgUrl;
+
+      modalTrackName.textContent = "Loading songs...";
+      currentDownloadBase = `https://archive.org/download/${album.id}/`;
+
+      resetPlayerUI();
+      playlistContainer.innerHTML = '<div class="status-text">Fetching songs from Archive.org...</div>';
+      
+      maximizePlayer();
+
+      try {
+        const res = await fetch(`https://archive.org/metadata/${album.id}`);
+        const data = await res.json();
+
+        currentSongs = (data.files || []).filter(f => 
+          f.name.toLowerCase().endsWith(".mp3") && f.format && f.format.includes("MP3")
+        ).map(f => ({
+          title: f.title || decodeURIComponent(f.name.replace(/\.mp3$/i, "")),
+          filename: f.name
+        }));
+
+        if (currentSongs.length === 0) {
+          playlistContainer.innerHTML = '<div class="status-text" style="color:#ef4444;">No MP3 tracks found in this collection.</div>';
+          modalTrackName.textContent = "No MP3 tracks available";
+          return;
+        }
+
+        renderPlaylist();
+        loadSong(0, false);
+      } catch (err) {
+        playlistContainer.innerHTML = `<div class="status-text" style="color:#ef4444;">Failed to load songs: ${err.message}</div>`;
+      }
+    }
+
+    function renderPlaylist() {
+      playlistContainer.innerHTML = "";
+      currentSongs.forEach((song, idx) => {
+        const item = document.createElement("div");
+        item.className = "track-item";
+        item.innerHTML = `
+          <span class="track-title-text">${idx + 1}. ${song.title}</span>
+          <span style="font-size:0.75rem;">▶</span>
+        `;
+        item.onclick = () => loadSong(idx, true);
+        playlistContainer.appendChild(item);
+      });
+    }
+
+    function loadSong(index, shouldAutoPlay = true) {
+      currentSongIndex = index;
+      const song = currentSongs[currentSongIndex];
+
+      modalTrackName.textContent = song.title;
+      miniTitle.textContent = song.title;
+      audioPlayer.src = currentDownloadBase + encodeURIComponent(song.filename);
+
+      document.querySelectorAll(".track-item").forEach((el, idx) => {
+        el.classList.toggle("active", idx === currentSongIndex);
+      });
+
+      seekSlider.value = 0;
+      currentTimeEl.textContent = "0:00";
+
+      if (shouldAutoPlay) {
+        audioPlayer.play().catch(() => {});
+      }
+    }
+
+    function resetPlayerUI() {
+      audioPlayer.pause();
+      audioPlayer.removeAttribute("src");
+      updatePlayIcons(false);
+      seekSlider.value = 0;
+      currentTimeEl.textContent = "0:00";
+      durationTimeEl.textContent = "0:00";
+    }
+
+    function updatePlayIcons(isPlaying) {
+      const icon = isPlaying ? "❚❚" : "▶";
+      playPauseBtn.textContent = icon;
+      miniPlayPauseBtn.textContent = icon;
+    }
+
+    function togglePlayPause() {
+      if (audioPlayer.paused) {
+        if (!audioPlayer.src && currentSongs.length > 0) {
+          loadSong(currentSongIndex, true);
+        } else {
+          audioPlayer.play().catch(() => {});
+        }
+      } else {
+        audioPlayer.pause();
+      }
+    }
+
+    playPauseBtn.onclick = togglePlayPause;
+    miniPlayPauseBtn.onclick = (e) => {
+      e.stopPropagation();
+      togglePlayPause();
+    };
+
+    audioPlayer.onplay = () => updatePlayIcons(true);
+    audioPlayer.onpause = () => updatePlayIcons(false);
+
+    function minimizePlayer() {
+      playerModal.classList.remove("active");
+      if (audioPlayer.src) {
+        miniPlayerBar.classList.add("active");
+      }
+    }
+
+    function maximizePlayer() {
+      miniPlayerBar.classList.remove("active");
+      playerModal.classList.add("active");
+    }
+
+    function stopAndCloseAll() {
+      playerModal.classList.remove("active");
+      miniPlayerBar.classList.remove("active");
+      resetPlayerUI();
+    }
+
+    minimizeBtn.onclick = minimizePlayer;
+    maximizeTrigger.onclick = maximizePlayer;
+    closeModalBtn.onclick = stopAndCloseAll;
+    miniCloseBtn.onclick = (e) => {
+      e.stopPropagation();
+      stopAndCloseAll();
+    };
+
+    playerModal.addEventListener("click", (e) => {
+      if (e.target === playerModal) {
+        minimizePlayer();
+      }
+    });
+
+    audioPlayer.ontimeupdate = () => {
+      if (!isSeeking && audioPlayer.duration) {
+        seekSlider.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+      }
+    };
+
+    audioPlayer.onloadedmetadata = () => {
+      durationTimeEl.textContent = formatTime(audioPlayer.duration);
+    };
+
+    seekSlider.oninput = () => { isSeeking = true; };
+    seekSlider.onchange = () => {
+      if (audioPlayer.duration) {
+        audioPlayer.currentTime = (seekSlider.value / 100) * audioPlayer.duration;
+      }
+      isSeeking = false;
+    };
+
+    function formatTime(secs) {
+      if (isNaN(secs)) return "0:00";
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function playPreviousTrack() {
+      if (currentSongs.length > 0) {
+        currentSongIndex = (currentSongIndex - 1 + currentSongs.length) % currentSongs.length;
+        loadSong(currentSongIndex, true);
+      }
+    }
+
+    function playNextTrack() {
+      if (currentSongs.length > 0) {
+        currentSongIndex = (currentSongIndex + 1) % currentSongs.length;
+        loadSong(currentSongIndex, true);
+      }
+    }
+
+    prevTrackBtn.onclick = playPreviousTrack;
+    nextTrackBtn.onclick = playNextTrack;
+
+    miniPrevBtn.onclick = (e) => {
+      e.stopPropagation();
+      playPreviousTrack();
+    };
+
+    miniNextBtn.onclick = (e) => {
+      e.stopPropagation();
+      playNextTrack();
+    };
+
+    audioPlayer.onended = () => playNextTrack();
+
+    likeBtn.onclick = () => {
+      likeBtn.classList.toggle("liked");
+      likeBtn.textContent = likeBtn.classList.contains("liked") ? "♥" : "♡";
+    };
+
+    window.addEventListener("DOMContentLoaded", renderAlbumGrid);
+  </script>
+</body>
+</html>
