@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BharatPulse Pro • Live NSE/BSE Market Terminal</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background: radial-gradient(circle at 10% 10%, #0d1527 0%, #030712 100%);
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- Header / Navigation Bar -->
+  <header class="glass sticky top-0 z-40 border-b border-white/10 px-4 md:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-blue-300 bg-clip-text text-transparent">
+          BharatPulse <span class="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30">PRO TERMINAL</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- Live Indices Ticker (Fetched Realtime) -->
+    <div class="hidden lg:flex items-center space-x-6 text-xs font-mono">
+      <div class="flex items-center space-x-1.5">
+        <span class="text-slate-400">NIFTY 50:</span>
+        <span id="niftyPrice" class="text-white font-bold">Loading...</span>
+        <span id="niftyChange" class="font-semibold text-slate-400">--</span>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <span class="text-slate-400">SENSEX:</span>
+        <span id="sensexPrice" class="text-white font-bold">Loading...</span>
+        <span id="sensexChange" class="font-semibold text-slate-400">--</span>
+      </div>
+    </div>
+
+    <!-- Status & Live Actions -->
+    <div class="flex items-center space-x-3">
+      <button onclick="fetchAllMarketData()" class="glass hover:bg-white/10 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+        <svg id="refreshIcon" class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span>Live Sync</span>
+      </button>
+      <div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[11px] text-emerald-400 font-mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Yahoo Finance API
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass p-4 rounded-2xl relative overflow-hidden">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Selected Scrip</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <h2 id="kpiName" class="text-lg font-bold text-white truncate max-w-[150px]">Loading...</h2>
+          <span id="kpiChange" class="font-mono text-sm font-semibold text-slate-400">--</span>
+        </div>
+        <div id="kpiPrice" class="mt-1 font-mono text-2xl font-extrabold text-white">₹ --</div>
+      </div>
+
+      <div class="glass p-4 rounded-2xl">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top Day Gainer</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <h2 id="topGainerName" class="text-lg font-bold text-white truncate max-w-[150px]">--</h2>
+          <span id="topGainerChange" class="font-mono text-sm font-semibold text-emerald-400">--</span>
+        </div>
+        <div id="topGainerPrice" class="mt-1 font-mono text-base font-semibold text-slate-300">₹ --</div>
+      </div>
+
+      <div class="glass p-4 rounded-2xl">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top Day Loser</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <h2 id="topLoserName" class="text-lg font-bold text-white truncate max-w-[150px]">--</h2>
+          <span id="topLoserChange" class="font-mono text-sm font-semibold text-rose-400">--</span>
+        </div>
+        <div id="topLoserPrice" class="mt-1 font-mono text-base font-semibold text-slate-300">₹ --</div>
+      </div>
+
+      <div class="glass p-4 rounded-2xl">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Watchlist Assets</div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <h2 class="text-xl font-bold text-white">Starred</h2>
+          <span id="watchlistCount" class="font-mono text-sm font-semibold text-blue-400">0 Saved</span>
+        </div>
+        <div class="text-xs text-slate-400 mt-2">Saved in your local storage</div>
+      </div>
+    </div>
+
+    <!-- Chart & SIP Planner Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Main Stock Chart (8 cols) -->
+      <div class="lg:col-span-8 glass p-5 md:p-6 rounded-2xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span id="chartSymbolBadge" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">NSE</span>
+              <h3 id="chartTitle" class="text-lg font-bold text-white">Stock Performance</h3>
+            </div>
+            <p id="chartSub" class="text-xs text-slate-400 mt-0.5">Real-time Yahoo Finance Historical Feed</p>
+          </div>
+
+          <!-- Timeframe Selector -->
+          <div class="flex items-center bg-slate-800/80 p-1 rounded-xl border border-white/5 text-xs font-semibold">
+            <button onclick="changeRange('1d', '5m', this)" class="tf-btn px-2.5 py-1 rounded-lg hover:text-white text-slate-400 transition">1D</button>
+            <button onclick="changeRange('5d', '15m', this)" class="tf-btn px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-sm transition">5D</button>
+            <button onclick="changeRange('1mo', '1d', this)" class="tf-btn px-2.5 py-1 rounded-lg hover:text-white text-slate-400 transition">1M</button>
+            <button onclick="changeRange('1y', '1wk', this)" class="tf-btn px-2.5 py-1 rounded-lg hover:text-white text-slate-400 transition">1Y</button>
+          </div>
+        </div>
+
+        <div class="relative w-full h-[320px]">
+          <canvas id="marketChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Financial SIP Calculator (4 cols) -->
+      <div class="lg:col-span-4 glass p-5 rounded-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <h3 class="font-bold text-sm text-slate-200 uppercase tracking-wider">SIP Calculator</h3>
+          <span class="text-[10px] bg-blue-500/20 text-blue-400 font-semibold px-2 py-0.5 rounded border border-blue-500/30">CAGR Model</span>
+        </div>
+        
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="text-slate-400 block mb-1">Monthly Investment (₹)</label>
+            <input id="sipAmount" type="number" value="10000" step="500" oninput="calculateSIP()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 font-mono text-white focus:outline-none focus:border-blue-500 transition" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-slate-400 block mb-1">Return (% p.a.)</label>
+              <input id="sipRate" type="number" value="14" step="0.5" oninput="calculateSIP()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 font-mono text-white focus:outline-none focus:border-blue-500 transition" />
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1">Duration (Years)</label>
+              <input id="sipYears" type="number" value="10" step="1" oninput="calculateSIP()" class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 font-mono text-white focus:outline-none focus:border-blue-500 transition" />
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-2">
+          <div class="flex justify-between text-slate-400">
+            <span>Invested Amount:</span>
+            <span id="sipInvested" class="text-slate-200 font-mono font-semibold">₹12,00,000</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>Est. Wealth Gain:</span>
+            <span id="sipGains" class="text-emerald-400 font-mono font-semibold">₹13,92,300</span>
+          </div>
+          <div class="flex justify-between border-t border-white/10 pt-2 text-white font-bold">
+            <span>Expected Maturity:</span>
+            <span id="sipTotal" class="text-blue-400 font-mono text-sm">₹25,92,300</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Market List Section -->
+    <div class="glass rounded-2xl overflow-hidden shadow-2xl">
+      <!-- Search & Filters -->
+      <div class="p-4 md:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-2 text-xs font-semibold">
+          <button onclick="setFilter('all')" id="filter-all" class="filter-tab px-3 py-1.5 rounded-lg bg-blue-600 text-white transition">Nifty 50 Scrips</button>
+          <button onclick="setFilter('gainers')" id="filter-gainers" class="filter-tab px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition">Day Gainers</button>
+          <button onclick="setFilter('losers')" id="filter-losers" class="filter-tab px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition">Day Losers</button>
+          <button onclick="setFilter('watchlist')" id="filter-watchlist" class="filter-tab px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition">Watchlist (⭐)</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full sm:w-64">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input 
+            type="text" 
+            id="searchInput" 
+            oninput="handleSearch()" 
+            placeholder="Search stock (e.g. TCS, HDFC)..." 
+            class="w-full bg-slate-900 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+          />
+        </div>
+      </div>
+
+      <!-- Stocks Table -->
+      <div class="overflow-x-auto custom-scroll">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-white/10 bg-slate-900/40 text-slate-400 uppercase tracking-wider font-semibold">
+              <th class="py-3.5 px-4 w-10 text-center">⭐</th>
+              <th class="py-3.5 px-4">Company</th>
+              <th class="py-3.5 px-4 text-right">LTP (₹)</th>
+              <th class="py-3.5 px-4 text-right">Daily Change</th>
+              <th class="py-3.5 px-4 text-right hidden sm:table-cell">Day High / Low</th>
+              <th class="py-3.5 px-4 text-right hidden md:table-cell">52W Range</th>
+              <th class="py-3.5 px-4 text-center">Chart</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody" class="divide-y divide-white/5 font-medium">
+            <tr>
+              <td colspan="7" class="py-12 text-center text-slate-400">
+                <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                <p>Fetching real-time market data from Yahoo Finance...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="mt-8 border-t border-white/10 py-5 px-6 text-center text-xs text-slate-500">
+    <p>© 2026 BharatPulse Terminal • Data sourced live from Yahoo Finance API • Pure HTML, CSS & Vanilla JS</p>
+  </footer>
+
+  <script>
+    // List of major NSE Scrips (Yahoo Finance tickers)
+    const STOCK_TICKERS = [
+      { symbol: 'RELIANCE.NS', name: 'Reliance Industries Ltd.' },
+      { symbol: 'TCS.NS', name: 'Tata Consultancy Services' },
+      { symbol: 'HDFCBANK.NS', name: 'HDFC Bank Limited' },
+      { symbol: 'INFY.NS', name: 'Infosys Limited' },
+      { symbol: 'ICICIBANK.NS', name: 'ICICI Bank Ltd.' },
+      { symbol: 'TATAMOTORS.NS', name: 'Tata Motors Limited' },
+      { symbol: 'SBIN.NS', name: 'State Bank of India' },
+      { symbol: 'BHARTIARTL.NS', name: 'Bharti Airtel Limited' },
+      { symbol: 'ITC.NS', name: 'ITC Limited' },
+      { symbol: 'LT.NS', name: 'Larsen & Toubro Ltd.' },
+      { symbol: 'MARUTI.NS', name: 'Maruti Suzuki India' },
+      { symbol: 'BAJFINANCE.NS', name: 'Bajaj Finance Limited' }
+    ];
+
+    let stocksData = [];
+    let currentStock = null;
+    let chartInstance = null;
+    let activeFilter = 'all';
+    let searchQuery = '';
+    let selectedRange = '5d';
+    let selectedInterval = '15m';
+    let watchlist = JSON.parse(localStorage.getItem('bharat_watchlist')) || ['RELIANCE.NS', 'TCS.NS', 'TATAMOTORS.NS'];
+
+    const formatINR = (val) => val ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(val) : '₹0.00';
+
+    // Helper function to query Yahoo Finance API via CORS proxy
+    async function queryYahooFinance(ticker, range = '1d', interval = '5m') {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=${range}&interval=${interval}`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+      const json = await res.json();
+      return json.chart.result[0];
+    }
+
+    // Fetch Indices (^NSEI and ^BSESN)
+    async function fetchIndices() {
+      try {
+        const [niftyData, sensexData] = await Promise.all([
+          queryYahooFinance('^NSEI', '1d', '5m'),
+          queryYahooFinance('^BSESN', '1d', '5m')
+        ]);
+
+        const updateIndexUI = (data, priceElId, changeElId) => {
+          const meta = data.meta;
+          const price = meta.regularMarketPrice;
+          const prevClose = meta.chartPreviousClose || meta.previousClose;
+          const change = price - prevClose;
+          const changePct = (change / prevClose) * 100;
+          const isUp = change >= 0;
+
+          document.getElementById(priceElId).textContent = price.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+          const chEl = document.getElementById(changeElId);
+          chEl.textContent = `${isUp ? '+' : ''}${change.toFixed(2)} (${isUp ? '+' : ''}${changePct.toFixed(2)}%)`;
+          chEl.className = `font-semibold ${isUp ? 'text-emerald-400' : 'text-rose-400'}`;
+        };
+
+        updateIndexUI(niftyData, 'niftyPrice', 'niftyChange');
+        updateIndexUI(sensexData, 'sensexPrice', 'sensexChange');
+      } catch (err) {
+        console.warn('Indices fetch fallback:', err);
+      }
+    }
+
+    // Fetch all stock prices from Yahoo Finance
+    async function fetchAllMarketData() {
+      const icon = document.getElementById('refreshIcon');
+      icon.classList.add('animate-spin');
+
+      try {
+        // Fetch concurrently
+        const promises = STOCK_TICKERS.map(async item => {
+          try {
+            const data = await queryYahooFinance(item.symbol, '5d', '15m');
+            const meta = data.meta;
+            const price = meta.regularMarketPrice;
+            const prevClose = meta.chartPreviousClose || meta.previousClose;
+            const change = price - prevClose;
+            const changePct = (change / prevClose) * 100;
+            const timestamps = data.timestamp || [];
+            const quotes = data.indicators.quote[0].close || [];
+
+            // Clean trend points
+            const trend = [];
+            const labels = [];
+            timestamps.forEach((ts, idx) => {
+              if (quotes[idx] !== null && quotes[idx] !== undefined) {
+                trend.push(quotes[idx]);
+                labels.push(new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+              }
+            });
+
+            return {
+              id: item.symbol,
+              symbol: item.symbol.replace('.NS', ''),
+              fullSymbol: item.symbol,
+              name: item.name,
+              price: price,
+              change: changePct,
+              changeAmount: change,
+              dayHigh: meta.regularMarketDayHigh || price,
+              dayLow: meta.regularMarketDayLow || price,
+              fiftyTwoHigh: meta.fiftyTwoWeekHigh || price,
+              fiftyTwoLow: meta.fiftyTwoWeekLow || price,
+              trend: trend,
+              labels: labels
+            };
+          } catch (e) {
+            console.warn(`Failed loading ${item.symbol}`, e);
+            return null;
+          }
+        });
+
+        const results = await Promise.all(promises);
+        stocksData = results.filter(Boolean);
+
+        if (stocksData.length > 0) {
+          if (!currentStock) currentStock = stocksData[0];
+          else {
+            const fresh = stocksData.find(s => s.id === currentStock.id);
+            if (fresh) currentStock = fresh;
+          }
+          updateKPIs();
+          renderChart();
+        }
+      } catch (err) {
+        console.error('Market data error:', err);
+      } finally {
+        setTimeout(() => icon.classList.remove('animate-spin'), 600);
+        renderTable();
+        fetchIndices();
+      }
+    }
+
+    // Render Dynamic Stock Table
+    function renderTable() {
+      const tbody = document.getElementById('stockTableBody');
+      tbody.innerHTML = '';
+
+      let filtered = [...stocksData].filter(stock => {
+        const matches = stock.name.toLowerCase().includes(searchQuery) || stock.symbol.toLowerCase().includes(searchQuery);
+        if (!matches) return false;
+
+        if (activeFilter === 'gainers') return stock.change > 0;
+        if (activeFilter === 'losers') return stock.change < 0;
+        if (activeFilter === 'watchlist') return watchlist.includes(stock.id);
+        return true;
+      });
+
+      // Sort dynamically for gainers and losers
+      if (activeFilter === 'gainers') filtered.sort((a, b) => b.change - a.change);
+      if (activeFilter === 'losers') filtered.sort((a, b) => a.change - b.change);
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">No stocks match your filter.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(stock => {
+        const isUp = stock.change >= 0;
+        const isFav = watchlist.includes(stock.id);
+
+        const row = document.createElement('tr');
+        row.className = `hover:bg-white/5 cursor-pointer transition ${currentStock && currentStock.id === stock.id ? 'bg-blue-600/10' : ''}`;
+        row.innerHTML = `
+          <td class="py-3 px-4 text-center">
+            <button onclick="toggleWatchlist('${stock.id}', event)" class="text-base transition hover:scale-125">
+              ${isFav ? '⭐' : '☆'}
+            </button>
+          </td>
+          <td class="py-3 px-4">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-xs text-blue-400 font-mono">
+                ${stock.symbol.slice(0, 3)}
+              </div>
+              <div>
+                <div class="font-bold text-white text-xs">${stock.name}</div>
+                <div class="text-[10px] text-slate-400 font-mono">NSE: ${stock.symbol}</div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-4 text-right font-mono font-bold text-white">
+            ${formatINR(stock.price)}
+          </td>
+          <td class="py-3 px-4 text-right font-mono font-semibold ${isUp ? 'text-emerald-400' : 'text-rose-400'}">
+            ${isUp ? '+' : ''}${stock.change.toFixed(2)}%
+          </td>
+          <td class="py-3 px-4 text-right font-mono text-slate-400 hidden sm:table-cell">
+            ${formatINR(stock.dayHigh)} / ${formatINR(stock.dayLow)}
+          </td>
+          <td class="py-3 px-4 text-right font-mono text-slate-300 hidden md:table-cell">
+            ${formatINR(stock.fiftyTwoHigh)} / ${formatINR(stock.fiftyTwoLow)}
+          </td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="selectStock('${stock.id}')" class="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-300 text-[11px] font-semibold transition">
+              View
+            </button>
+          </td>
+        `;
+        row.onclick = () => selectStock(stock.id);
+        tbody.appendChild(row);
+      });
+
+      // Update KPI Top Gainer & Loser
+      if (stocksData.length > 0) {
+        const sorted = [...stocksData].sort((a, b) => b.change - a.change);
+        const topG = sorted[0];
+        const topL = sorted[sorted.length - 1];
+
+        if (topG) {
+          document.getElementById('topGainerName').textContent = topG.name;
+          document.getElementById('topGainerPrice').textContent = formatINR(topG.price);
+          document.getElementById('topGainerChange').textContent = `+${topG.change.toFixed(2)}%`;
+        }
+        if (topL) {
+          document.getElementById('topLoserName').textContent = topL.name;
+          document.getElementById('topLoserPrice').textContent = formatINR(topL.price);
+          document.getElementById('topLoserChange').textContent = `${topL.change.toFixed(2)}%`;
+        }
+      }
+
+      document.getElementById('watchlistCount').textContent = `${watchlist.length} Saved`;
+    }
+
+    // Select Stock for Chart & Header
+    async function selectStock(id) {
+      const stock = stocksData.find(s => s.id === id);
+      if (!stock) return;
+      currentStock = stock;
+      updateKPIs();
+      await loadSpecificChartData(currentStock.fullSymbol, selectedRange, selectedInterval);
+      renderTable();
+    }
+
+    // Update KPI Card UI
+    function updateKPIs() {
+      if (!currentStock) return;
+      document.getElementById('kpiName').textContent = currentStock.name;
+      document.getElementById('kpiPrice').textContent = formatINR(currentStock.price);
+      
+      const kpiChange = document.getElementById('kpiChange');
+      const isUp = currentStock.change >= 0;
+      kpiChange.textContent = `${isUp ? '+' : ''}${currentStock.change.toFixed(2)}%`;
+      kpiChange.className = `font-mono text-sm font-semibold ${isUp ? 'text-emerald-400' : 'text-rose-400'}`;
+
+      document.getElementById('chartTitle').textContent = currentStock.name;
+      document.getElementById('chartSymbolBadge').textContent = `${currentStock.symbol} • NSE`;
+    }
+
+    // Load Specific Timeframe for Chart
+    async function loadSpecificChartData(ticker, range, interval) {
+      try {
+        const data = await queryYahooFinance(ticker, range, interval);
+        const timestamps = data.timestamp || [];
+        const quotes = data.indicators.quote[0].close || [];
+
+        const trend = [];
+        const labels = [];
+        timestamps.forEach((ts, idx) => {
+          if (quotes[idx] !== null && quotes[idx] !== undefined) {
+            trend.push(quotes[idx]);
+            const d = new Date(ts * 1000);
+            labels.push(range === '1d' ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString([], { month: 'short', day: 'numeric' }));
+          }
+        });
+
+        currentStock.trend = trend;
+        currentStock.labels = labels;
+        renderChart();
+      } catch (err) {
+        console.warn('Range switch chart error:', err);
+      }
+    }
+
+    // Chart.js Drawing
+    function renderChart() {
+      if (!currentStock || !currentStock.trend || currentStock.trend.length === 0) return;
+      const ctx = document.getElementById('marketChart').getContext('2d');
+      const isUp = currentStock.change >= 0;
+      const lineColor = isUp ? '#10b981' : '#f43f5e';
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, isUp ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)');
+      gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: currentStock.labels,
+          datasets: [{
+            data: currentStock.trend,
+            borderColor: lineColor,
+            backgroundColor: gradient,
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.25,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: lineColor,
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#94a3b8',
+              bodyColor: '#ffffff',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              padding: 10,
+              displayColors: false,
+              callbacks: {
+                label: (context) => ` Price: ${formatINR(context.raw)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#64748b', font: { family: 'Inter', size: 10 }, maxTicksLimit: 8 }
+            },
+            y: {
+              position: 'right',
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'JetBrains Mono', size: 10 },
+                callback: (value) => '₹' + value.toFixed(1)
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Change Range (1D, 5D, 1M, 1Y)
+    async function changeRange(range, interval, btnEl) {
+      selectedRange = range;
+      selectedInterval = interval;
+      document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.className = "tf-btn px-2.5 py-1 rounded-lg hover:text-white text-slate-400 transition";
+      });
+      btnEl.className = "tf-btn px-2.5 py-1 rounded-lg bg-blue-600 text-white shadow-sm transition";
+
+      if (currentStock) {
+        await loadSpecificChartData(currentStock.fullSymbol, range, interval);
+      }
+    }
+
+    // SIP Calculator
+    function calculateSIP() {
+      const p = parseFloat(document.getElementById('sipAmount').value) || 0;
+      const annualRate = parseFloat(document.getElementById('sipRate').value) || 0;
+      const years = parseFloat(document.getElementById('sipYears').value) || 0;
+
+      const i = (annualRate / 100) / 12;
+      const n = years * 12;
+
+      const totalInvested = p * n;
+      let maturity = 0;
+      if (i > 0) {
+        maturity = p * ((Math.pow(1 + i, n) - 1) / i) * (1 + i);
+      } else {
+        maturity = totalInvested;
+      }
+      const gains = maturity - totalInvested;
+
+      document.getElementById('sipInvested').textContent = formatINR(totalInvested);
+      document.getElementById('sipGains').textContent = formatINR(gains);
+      document.getElementById('sipTotal').textContent = formatINR(maturity);
+    }
+
+    // Watchlist
+    function toggleWatchlist(id, e) {
+      e.stopPropagation();
+      if (watchlist.includes(id)) {
+        watchlist = watchlist.filter(item => item !== id);
+      } else {
+        watchlist.push(id);
+      }
+      localStorage.setItem('bharat_watchlist', JSON.stringify(watchlist));
+      renderTable();
+    }
+
+    // Filters
+    function setFilter(type) {
+      activeFilter = type;
+      document.querySelectorAll('.filter-tab').forEach(b => {
+        b.className = "filter-tab px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition";
+      });
+      document.getElementById(`filter-${type}`).className = "filter-tab px-3 py-1.5 rounded-lg bg-blue-600 text-white transition";
+      renderTable();
+    }
+
+    // Search
+    function handleSearch() {
+      searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+      renderTable();
+    }
+
+    // Initialize App
+    window.addEventListener('DOMContentLoaded', () => {
+      calculateSIP();
+      fetchAllMarketData();
+      // Auto-sync market every 60 seconds
+      setInterval(fetchAllMarketData, 60000);
+    });
+  </script>
+</body>
+</html>
